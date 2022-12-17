@@ -14,12 +14,12 @@ export const ShopLayout:FC<Props> = ( { children, title, pageDescription, imageF
   return (
     <>
         <Head>
-            <title> { title } </title>
+            <title> {title} </title>
             {/* metatags para mejorar la indexacion */}
             <meta name="description" content={ pageDescription }/>
 
             {/* para compartir en redes sociales */}
-            <meta name="og:title" content={ title }/>
+            <meta name="og:title" content={title}/>
             <meta name="og:description" content={ pageDescription }/>
 
             {/* si tenemos el imageFulllUrl usamos la siguiente metatag */}
