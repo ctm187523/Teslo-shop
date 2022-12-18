@@ -4,7 +4,7 @@ import { CartList, OrderSummary} from '../../components/cart'
 import { ShopLayout } from '../../components/layouts'
 
 
-const index = () => {
+const CartPage = () => {
     return (
         <ShopLayout title='Carrito - 3' pageDescription="Carrito de compras de la tienda">
 
@@ -42,4 +42,4 @@ const index = () => {
     )
 }
 
-export default index
+export default CartPage;
