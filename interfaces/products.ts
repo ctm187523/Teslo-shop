@@ -1,5 +1,5 @@
 export interface IProduct {
-    _id: string;
+    _id: string; //lo crea Mongo
     description: string;
     images: string[];
     inStock: number;
@@ -11,7 +11,9 @@ export interface IProduct {
     type: IType;
     gender: 'men'|'women'|'kid'|'unisex'
 
-    //TODO: agregar createdAt y updateAt
+    ////Mongo crea automaticamente los timestamps(createdAt, updatedAt) en la base de datos
+    createdAt: string;
+    updatedAt: string;
 }
 
 export type ISize = 'XS'|'S'|'M'|'L'|'XL'|'XXL'|'XXXL';
