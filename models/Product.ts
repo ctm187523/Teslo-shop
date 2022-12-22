@@ -37,7 +37,8 @@ const productSchema = new Schema({
 });
 
 
-//TODO: Crear indice de Mongo
+//Creamos un indice de Mongo para realizar busquedas, usamos title y tags como campos de busqueda
+productSchema.index({ title: 'text', tags: 'text'});
 
 
 //con mongoose.models.Product hacemos que busque ese producto si existe que lo use y si no 
