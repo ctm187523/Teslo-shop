@@ -4,8 +4,17 @@ import { AppBar, Toolbar, Link, Typography, Box, Button, IconButton } from '@mui
 import { SearchOutlined, ShoppingCartOutlined } from '@mui/icons-material';
 import Badge from '@mui/material/Badge';
 
+import { useRouter } from "next/router";
+
 
 export const Navbar = () => {
+
+  //usamos el Hook useRouter para ver que pagina esta activa, recibimos el url de la pagina que se esta mostrando
+  //para poner el color de los botones hombres,mujeres y niños en un color difrente a la pagina activa
+  //desestructuramos el asPath que es la informacion que queremos
+  const { asPath } = useRouter();
+  
+
   return (
     <AppBar>
       <Toolbar>
@@ -22,13 +31,15 @@ export const Navbar = () => {
         no hace falta definir las otras medidas porque es a partir de la medida pequeña la que no se tiene que mostrar*/}
         <Box sx={{ display: {xs:'none', sm:'block'}}}>
           <NextLink href='/category/men' passHref style={{ textDecoration: 'none'}}>
-            <Button>Hombres</Button>
+            {/* cambiamos el color del boton con la condicion de que si estamos en la ruta especificada en asPath sacadad del hook de arriba useRouter 
+            parea resaltar el boton en la pagina activa*/}
+            <Button color={ asPath === '/category/men' ? 'primary' : 'info' }>Hombres</Button>
           </NextLink>
           <NextLink href='/category/women' passHref style={{ textDecoration: 'none'}}>
-            <Button>Mujeres</Button>
+            <Button color={ asPath === '/category/women' ? 'primary' : 'info' }>Mujeres</Button>
           </NextLink>
           <NextLink href='/category/kid' passHref style={{ textDecoration: 'none'}}>
-            <Button>Niños</Button>
+            <Button color={ asPath === '/category/kid' ? 'primary' : 'info' }>Niños</Button>
           </NextLink>
         </Box>
 

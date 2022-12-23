@@ -16,12 +16,12 @@ export const ProductCard: FC<Props> = ({ product }) => {
     const [isImageLoaded, setIsImageLoaded] = useState(false);
 
     //usamos el useMemo para memorizar el productImage como dependencia es el cambio del isHovered del useState de arriba
-    // y el product.images. Si isHovered es true, el mouse esta encima de la imagen mostramos la imagen del array produect.images
+    // y el product.images. Si isHovered es true, el mouse esta encima de la imagen mostramos la imagen del array product.images
     //posicion 1 de la carpeta public/products si es false mostramos la posicion 0
     const productImage = useMemo(() => {
         return isHovered
-            ? `products/${product.images[1]}`
-            : `products/${product.images[0]}`
+            ? `/products/${product.images[1]}`
+            : `/products/${product.images[0]}`
 
     }, [isHovered, product.images])
 
