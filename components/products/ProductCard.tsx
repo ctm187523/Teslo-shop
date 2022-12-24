@@ -35,7 +35,7 @@ export const ProductCard: FC<Props> = ({ product }) => {
         >
             <Card>
                 {/* usamos NextLink importado arriba para redirigir un producto seleccionado */}
-                <NextLink href="product/slug" passHref prefetch={false} style={{ textDecoration: 'none' }}>
+                <NextLink href={`/product/${product.slug}`} passHref prefetch={false} style={{ textDecoration: 'none' }}>
                     {/* colocamos un CardActionArea para que se pueda hacer click */}
                     <CardActionArea>
                         <CardMedia
