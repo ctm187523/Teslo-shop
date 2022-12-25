@@ -174,7 +174,7 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 export const getStaticProps: GetStaticProps = async (ctx) => {
 
   //leemos el ctx el contexto para recibir los parametros ctx.params donde obtenemos el slug de la pagina del producto seleccionado
-  //lo tipamos con as { slug: string }, lo recibimos de la url
+  //lo tipamos con as { slug: string }, lo recibimos de la url, por si no viene informacion ponemos slug = '' por defecto
   const { slug = ''} = ctx.params as { slug: string };
 
   //usamos el metodo getProductBySlug de database/dbProducts para obtener el producto por su slug
