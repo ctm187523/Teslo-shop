@@ -9,11 +9,15 @@ import { ItemCounter } from "../../components/ui";
 //import { initialData } from '../../database/products';
 //import { useRouter } from 'next/router';
 //import { useProducts } from '../../hooks/useProducts';
-import { IProduct } from '../../interfaces/products';
+import { IProduct, ISize } from '../../interfaces/products';
 import { GetStaticPaths, GetStaticProps, NextPage } from 'next';
 
-import { GetServerSideProps } from "next";
+
 import { dbProducts } from "../../database";
+import { useState, useContext } from 'react';
+import { ICartProduct } from '../../interfaces/cart';
+import { useRouter } from "next/router";
+import { CartContext } from '../../context/cart/CartContext';
 
 
 
@@ -25,7 +29,7 @@ interface Props {
   product: IProduct //tipamos los productos con la interfaz IProdecut de /interfaces/products
 }
 
-const ProductPage:NextPage<Props> = ({ product }) => {
+const ProductPage: NextPage<Props> = ({ product }) => {
 
   //COMENTAMOS el codigo de abajo para mostrar como se haria usando el useRouter, finalmente usamos getServerSideProps si lo hubieramos echo con lo comentado no tendriamos SEO
   //usamos el Hook de React useRouter para saber que slug se quiere mostrar recibimos por parametro el slug desde donde se envia components/products/ProductCard
@@ -44,6 +48,52 @@ const ProductPage:NextPage<Props> = ({ product }) => {
   // }
 
 
+  //usamos el Hook useRouter para redirigir a la pagina del carrito
+   const router = useRouter(); 
+
+   //usamos el contexto de CartContext creado en context/cart/CartContext
+   const { addProductToCart } = useContext(CartContext)
+
+  //usamos un useState tipado de tipo ICartProduct para controlar el estado del producto, el cliente puede
+  //cambiar las tallas seleccionadas y las cantidades que desea del producto
+  const [tempCartProduct, setTempCartProduct] = useState<ICartProduct>({
+      _id: product._id,
+      image: product.images[0],
+      price: product.price,
+      size: undefined,
+      slug: product.slug,
+      title: product.title,
+      gender: product.gender,
+      quantity: 1,
+  });
+
+  //funcion para cambiar el estado de la talla seleccionada del producto usando el useState de arriba
+  const selecteSize = ( size:ISize) => {
+      //usamos del useState de arriba setTempCartProduct para modificar el objeto y poner como size 
+      //la medida recibida de abajo del componente SizeSelector, currentProduct es el nombre aleatorio que hemos puesto al argumento
+      setTempCartProduct( currentProduct => ({
+        ...currentProduct,
+        size:size
+      }));
+  }
+
+  //funcion para cambiar el estado de las cantidades del producto usando el useState de arriba
+  const onUpdateQuantiy = ( value:number) => {
+     setTempCartProduct( currentProduct => ({
+       ...currentProduct,
+       quantity:value
+     }))
+  }
+
+  //funcion para agregar un producto al carrito
+  const onAddProduct = () => {
+
+    if ( !tempCartProduct.size ) { return } // si no se ha seleccionado la talla no agregamos al carrito el producto
+
+    //llamar la accion del context para agregar al carrito
+    addProductToCart(tempCartProduct) // mandamos usando el metodo del context addProductToCart de CartContext el tempCartProduct del useState de arriba
+    //router.push('/cart');
+  }
 
   return (
     <ShopLayout title={product.title} pageDescription={product.description} >
@@ -75,26 +125,46 @@ const ProductPage:NextPage<Props> = ({ product }) => {
 
               {/* Item counter */}
               {/* usamos el componente creado en components/ui/ItemCounter*/}
-              <ItemCounter />
+              <ItemCounter 
+                currentValue={ tempCartProduct.quantity} //pasamos el valor del useState tempCartProduct la cantidad por defecto que es 1
+                updateQuantity= { (value) => onUpdateQuantiy(value)} //llamamos a la funcion creda arriba onUpdateQuantity para cambiar la cantidad en el estado del producto
+                maxValue={ product.inStock > 10 ? 10 : product.inStock } //limitamos el maximo de productos a 10
+              />
 
               {/* colocamos el componete creada en components/products/SizeSelector
               para la seleccion de tallas*/}
               <SizeSelector
-                //selectedSize={ product.sizes[ 0 ]} //como la talla seleccionada cojemos la primera posicion
-                sizes={product.sizes}
+                sizes={product.sizes} //le mandamos las medidas que tiene el producto
+                selectedSize= { tempCartProduct.size } //ponemos como medida seleccionada la que tenemos en tempCartProduct del useState de arriba por defecto es undefined
+                onSelectedSize = { (size) => selecteSize(size)} //le mandamos a la funcion selectedSize de arriba el boton pulsado recibido del onClick del componente SizeSelector.tsx en components/products
               />
             </Box>
 
-            {/* Agregar al carrito */}
-            <Button
-              color='secondary'
-              className='circular-btn' //clase perteneciente a styles/globals.css
-            >
-              Agregar al carrito
-            </Button>
+            {/* creamos una condicion si existen productos el sstock es mayor que cero mostramos el boton
+            de Agregar al carrito en caso contrario mostramos un componente Chip advirtiendo que no hay disponibles*/}
+            {
+              (product.inStock > 0)
+                ? (
+                  //Agregar al carrito 
+                  <Button
+                    color='secondary'
+                    className='circular-btn' //clase perteneciente a styles/globals.css
+                    onClick={ onAddProduct }
+                  >
+                    {
+                      //hacemos que aparezca en el boton si no se ha seleccionado una talla un texto diciendo que debe seleccionar una talla antes de agregar al carrito
+                      tempCartProduct.size
+                        ? 'Agregar al carrito'
+                        : 'Seleccione una talla'
+                    }
+                  </Button>
 
-            {/* Mostramos al cliente que no esta disponible usamos Chip de materia UI*/}
-            {/* <Chip label="no hay disponibles" color="error" variant="outlined"/> */}
+                )
+                : (
+                  //Mostramos al cliente que no esta disponible usamos Chip de materia UI
+                  <Chip label="no hay disponibles" color="error" variant="outlined" />
+                )
+            }
 
             {/* Descripcion */}
             <Box sx={{ mt: 3 }}>
@@ -156,8 +226,8 @@ export const getStaticPaths: GetStaticPaths = async (ctx) => {
 
   return {
     //recorremos cada uno de los objetos obtenidos y en params creamos el objeto con el slug correspondiente
-    paths : productsSlugs.map( object => ({
-      
+    paths: productsSlugs.map(object => ({
+
       params: { slug: object.slug }
     })),
     //fallback: false //con fallback false decimos que si la peticion es un id que no existe muestre error 404
@@ -175,16 +245,16 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
 
   //leemos el ctx el contexto para recibir los parametros ctx.params donde obtenemos el slug de la pagina del producto seleccionado
   //lo tipamos con as { slug: string }, lo recibimos de la url, por si no viene informacion ponemos slug = '' por defecto
-  const { slug = ''} = ctx.params as { slug: string };
+  const { slug = '' } = ctx.params as { slug: string };
 
   //usamos el metodo getProductBySlug de database/dbProducts para obtener el producto por su slug
-  const product = await dbProducts.getProductBySlug( slug )
+  const product = await dbProducts.getProductBySlug(slug)
 
   //comprobamos si tenemos una respuesta del producto solicitado por slug usamos el Incremental Static Generation(ISG)
   //si no tenemos una respuesta satisfactoria redirigimos al home, no la hacemos permanente
-  if ( !product ) {
+  if (!product) {
     return {
-      redirect: { 
+      redirect: {
         destination: '/',
         permanent: false,
       }
@@ -198,7 +268,7 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
     props: {
       //devolvemos la data que es toda la informacion del producto recibida de la request
       //para la request usamos el metodo getProductBySlug de database/dbProducts para obtener el producto por su slug
-      product: product 
+      product: product
     },
     //usamos el Incremental Static Regeneration(ISR), es opcional
     //lo usamos para decirle a Next que cada 60 segundos * 60 minutos * 24, es decir que cada dia se revalide la pagina
@@ -206,6 +276,6 @@ export const getStaticProps: GetStaticProps = async (ctx) => {
     //en este caso si al cambiar la data, la informacion de los Pokemons se actualizaria el contenido
     revalidate: 8640,
   }
-} 
+}
 
 export default ProductPage

@@ -3,11 +3,16 @@ import { FC } from "react";
 import { ISize } from '../../interfaces'
 
 interface Props {
-    selectedSize?: ISize; //importamos de interfaces/products, opcional
-    sizes: ISize[]; //importamos de interfaces/products
+    selectedSize?: ISize; //importamos de interfaces/products, opcional, el la talla seleccionada
+    sizes: ISize[]; //importamos de interfaces/products , son todas las tallas que tiene un producto
+
+    //metodos
+    onSelectedSize: (size: ISize ) => void; //metodo definido pero desarrollado en pages/product/[slug].tsx, para seleccionar la talla que el usuario escoje
 }
 
-export const SizeSelector: FC<Props> = ({ selectedSize, sizes }) => {
+export const SizeSelector: FC<Props> = ({ selectedSize, sizes, onSelectedSize }) => {
+
+
     return (
         <Box>
             {
@@ -16,7 +21,8 @@ export const SizeSelector: FC<Props> = ({ selectedSize, sizes }) => {
                 sizes.map(size => (
                     <Button
                         key={ size }
-                        size='small'
+                        //size='small'
+                        onClick={ () => onSelectedSize( size ) } //al pulsar el boton le pasemos el size, la medida que tiene implicita el boton pulsado
                         //si el selectedSize es igual al size le ponemos el color primary al resto info
                         color = { selectedSize === size ? 'primary' : 'info'}
                     >
