@@ -39,9 +39,11 @@ export const Navbar = () => {
     <AppBar>
       <Toolbar>
         {/* el passHref es para que le pase la referencia de la ruta */}
-        <NextLink href='/' passHref style={{ textDecoration: 'none', display: 'flex', alignItems: 'center', color: 'black' }}>
-          <Typography variant='h6'>Teslo |</Typography>
-          <Typography sx={{ ml: 0.5 }}>Shop</Typography>
+        <NextLink href='/' passHref>
+          <Link display='flex' alignItems='center'>
+            <Typography variant='h6'>Teslo |</Typography>
+            <Typography sx={{ ml: 0.5 }}>Shop</Typography>
+          </Link>
         </NextLink>
         {/* El Box es como un div que nos permite tener acceso al tema principal de la aplicacion 
         con el flex =1 toma todo el espacio disponible*/}
@@ -52,16 +54,20 @@ export const Navbar = () => {
         decimos que se muestre el menu de Hombre,mujeres y niños si isSerchVisible esta en false asi al aparecer el espacio para poner el texto del buscador para buscar un producto se ocultan los menus hombre,mujer niñis del Navbar*/}
         <Box sx={{ display: isSerchVisible ? 'none' : { xs: 'none', sm: 'block' } }}
           className="fadeIn">
-          <NextLink href='/category/men' passHref style={{ textDecoration: 'none' }}>
-            {/* cambiamos el color del boton con la condicion de que si estamos en la ruta especificada en asPath sacadad del hook de arriba useRouter 
-            parea resaltar el boton en la pagina activa*/}
-            <Button color={asPath === '/category/men' ? 'primary' : 'info'}>Hombres</Button>
+          <NextLink href='/category/men' passHref>
+            <Link>
+              <Button color={asPath === '/category/men' ? 'primary' : 'info'}>Hombres</Button>
+            </Link>
           </NextLink>
-          <NextLink href='/category/women' passHref style={{ textDecoration: 'none' }}>
-            <Button color={asPath === '/category/women' ? 'primary' : 'info'}>Mujeres</Button>
+          <NextLink href='/category/women' passHref>
+            <Link>
+              <Button color={asPath === '/category/women' ? 'primary' : 'info'}>Mujeres</Button>
+            </Link>
           </NextLink>
-          <NextLink href='/category/kid' passHref style={{ textDecoration: 'none' }}>
-            <Button color={asPath === '/category/kid' ? 'primary' : 'info'}>Niños</Button>
+          <NextLink href='/category/kid' passHref>
+            <Link>
+              <Button color={asPath === '/category/kid' ? 'primary' : 'info'}>Niños</Button>
+            </Link>
           </NextLink>
         </Box>
 
@@ -114,13 +120,15 @@ export const Navbar = () => {
           <SearchOutlined />
         </IconButton>
 
-        <NextLink href='/cart' passHref style={{ textDecoration: 'none' }}>
-          <IconButton>
-            {/* el Badge es para colocar los numeros arriba */}
-            <Badge badgeContent={2} color="secondary">
-              <ShoppingCartOutlined />
-            </Badge>
-          </IconButton>
+        <NextLink href="/cart" passHref>
+          <Link>
+            <IconButton>
+              {/* el Badge es para colocar los numeros arriba */}
+              <Badge badgeContent={2} color="secondary">
+                <ShoppingCartOutlined />
+              </Badge>
+            </IconButton>
+          </Link>
         </NextLink>
 
         {/* llamamos al metodo toggleSideMenu del contexto UiContext */}

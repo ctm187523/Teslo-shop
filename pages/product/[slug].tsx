@@ -92,7 +92,7 @@ const ProductPage: NextPage<Props> = ({ product }) => {
 
     //llamar la accion del context para agregar al carrito
     addProductToCart(tempCartProduct) // mandamos usando el metodo del context addProductToCart de CartContext el tempCartProduct del useState de arriba
-    //router.push('/cart');
+    router.push('/cart');
   }
 
   return (

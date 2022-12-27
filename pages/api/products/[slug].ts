@@ -1,6 +1,5 @@
 
 import type { NextApiRequest, NextApiResponse } from 'next';
-import mongoose from 'mongoose';
 import { db } from '../../../database';
 import Product from '../../../models/Product';
 import { IProduct } from '../../../interfaces/products';

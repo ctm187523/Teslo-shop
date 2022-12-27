@@ -1,6 +1,6 @@
 import NextLink from 'next/link';
 
-import { Box, Button, Grid, TextField, Typography } from '@mui/material'
+import { Box, Button, Grid, TextField, Typography, Link } from '@mui/material'
 import React from 'react'
 import { AuthLayout } from '../../components/layouts'
 
@@ -33,8 +33,10 @@ const RegisterPage = () => {
                     </Grid>
 
                     <Grid item xs={12} display='flex' justifyContent='end'>
-                        <NextLink href="/auth/login" passHref style={{ color: 'black' }}>
-                            <Typography>¿Ya tienes cuenta?</Typography>
+                        <NextLink href="/auth/login" passHref>
+                            <Link underline='always'>
+                                ¿Ya tienes cuenta?
+                        </Link>
                         </NextLink>
                     </Grid>
                 </Grid>

@@ -1,4 +1,4 @@
-import { Grid, CardActionArea, CardMedia, Card, Box, Typography, Chip } from "@mui/material";
+import { Grid, CardActionArea, CardMedia, Card, Box, Typography, Chip, Link } from "@mui/material";
 import { FC, useMemo, useState } from "react";
 import { IProduct } from '../../interfaces';
 import NextLink from 'next/link';
@@ -35,33 +35,36 @@ export const ProductCard: FC<Props> = ({ product }) => {
         >
             <Card>
                 {/* usamos NextLink importado arriba para redirigir un producto seleccionado */}
-                <NextLink href={`/product/${product.slug}`} passHref prefetch={false} style={{ textDecoration: 'none' }}>
-
-                    {/* colocamos un CardActionArea para que se pueda hacer click */}
-                    <CardActionArea>
-                        {/* componente que se visualiza cuando el producto no esta disponible 
-                        creamos una condicion para que se muestre si el stock es cero*/}
-                        {
-                            (product.inStock === 0) && (
-                                <Chip
-                                    color="primary"
-                                    label="No hay dispinibles"
-                                    //ponemos la position absolute para que se muestre dentro del card, zIndex para que se muestre por encima
-                                    sx={{ position: 'absolute', zIndex: 99, top: '10px', left: '10px' }}
-                                />
-                            )
-                        }
 
 
-                        <CardMedia
-                            component='img'
-                            //usamos para mostrar la imagen el Hook useMemo de arriba
-                            image={productImage}
-                            alt={product.title}
-                            className='fadeIn' //usamos fadeIn de styles/globals.css que consiste en una animacion
-                            onLoad={() => setIsImageLoaded(true)} //cambiamos la condicion a true del useState de arriba para indicar cuando se carga la imagen, lo usaremos abajo en el texto de descripcion de la imagen para que hasta que la imagen no este cargada no se muestre el texto
-                        />
-                    </CardActionArea>
+
+                <NextLink href={`/product/${product.slug}`} passHref prefetch={false}>
+                    <Link>
+                        {/* colocamos un CardActionArea para que se pueda hacer click */}
+                        <CardActionArea>
+                            {/* componente que se visualiza cuando el producto no esta disponible 
+                            creamos una condicion para que se muestre si el stock es cero*/}
+                            {
+                                (product.inStock === 0) && (
+                                    <Chip
+                                        color="primary"
+                                        label="No hay disponibles"
+                                        //ponemos la position absolute para que se muestre dentro del card, zIndex para que se muestre por encima
+                                        sx={{ position: 'absolute', zIndex: 99, top: '10px', left: '10px' }}
+                                    />
+                                )
+                            }
+
+                            <CardMedia
+                                component='img'
+                                className='fadeIn'
+                                image={productImage}
+                                alt={product.title}
+                                onLoad={() => setIsImageLoaded(true)}
+                            />
+
+                        </CardActionArea>
+                    </Link>
                 </NextLink>
             </Card>
 

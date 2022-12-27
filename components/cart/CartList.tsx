@@ -45,7 +45,7 @@ export const CartList: FC<Props> = ({ editable = false }) => {
                                 {/* Importamos el ItemCounter de components/ui */}
                                 {
                                     editable
-                                        ? <ItemCounter />
+                                        ? <h1>h</h1>
                                         : <Typography variant='h5'>3 items</Typography>
                                 }
 
