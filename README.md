@@ -8,6 +8,7 @@ docker-compose up -d
 
 ## Configurar las varaibles de entorno
 Renombrar el archivo __.env.template__  a __.env__
+completar el JWT_SECRET_SEED
 
 MongoDB URL Local:
 ```

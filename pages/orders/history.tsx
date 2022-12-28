@@ -1,7 +1,7 @@
 
 import NextLink from 'next/link';
 
-import { Chip, Grid, Typography } from '@mui/material';
+import { Chip, Grid, Typography, Link} from '@mui/material';
 
 import React from 'react';
 import { ShopLayout } from '../../components/layouts';
@@ -37,8 +37,10 @@ const columns: GridColDef[] = [
         sortable: false, //quita la flecha para ordenar el listado de filas
         renderCell: (params) => {
             return (
-                <NextLink href={ `/orders/${ params.row.id }`} passHref style={{ color:'black' }}>
-                    <Typography>ver orden</Typography>
+                <NextLink href={`/orders/${params.row.id}`} passHref>
+                    <Link underline='always'>
+                        Ver orden
+                    </Link>
                 </NextLink>
             )
         }

@@ -1,7 +1,8 @@
 // Next.js API route support: https://nextjs.org/docs/api-routes/introduction
 import type { NextApiRequest, NextApiResponse } from 'next'
 import { db, seedDataBase } from '../../database'
-import { Product } from '../../models';
+import { Product, User } from '../../models';
+
 
 
 type Data = {
@@ -19,9 +20,15 @@ export default async function handler(req: NextApiRequest,res: NextApiResponse<D
 
   await db.connect(); //nos conectamos a la base de datos importandola arriba en la linea 3
 
+  //del modelo User importado arriba primeramente borramos la base datos y seguidamente
+  //importamos los usuarios creados en seddDataBase desde el archivo database/seed-data
+  //esto nos crea una tabla llamada users
+  await User.deleteMany();
+  await User.insertMany( seedDataBase.initialData.users);
+
   //importamos el Product de models/Product
   await Product.deleteMany(); //borramos todo lo de la base ded datos que se encuentre en la coleccion de entradas
-  await Product.insertMany( seedDataBase.initialData.products); //insertamos desde el archivo database/seed-data los productos
+  await Product.insertMany( seedDataBase.initialData.products); //insertamos desde el archivo database/seed-data los productos esto nos crea una tabla llamada products
   
   await db.disconnect(); //nos desconectamos al finalizar el trabajo
 

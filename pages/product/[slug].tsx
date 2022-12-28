@@ -1,8 +1,7 @@
 
 //para mostrar las imagenes slide-show he intalado un paquete con --> yarn add react-slideshow-image
 
-import { Button, Chip, Grid, Typography } from "@mui/material";
-import { Box } from "@mui/system";
+import { Button, Chip, Grid, Typography, Box } from "@mui/material";
 import { ShopLayout } from "../../components/layouts"
 import { ProductsSlideshow, SizeSelector } from "../../components/products";
 import { ItemCounter } from "../../components/ui";
