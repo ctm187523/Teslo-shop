@@ -7,6 +7,7 @@ import Badge from '@mui/material/Badge';
 import { useRouter } from "next/router";
 import { useContext, useState } from 'react';
 import { UiContext } from '../../context/ui/UiContext';
+import { CartContext } from '../../context/cart/CartContext';
 
 
 export const Navbar = () => {
@@ -19,6 +20,9 @@ export const Navbar = () => {
   //usamos el Hook useContext para acceder a las variables y metodos globales del contexto UiContext 
   //ubicado en context/ui/UiContext
   const { toggleSideMenu } = useContext(UiContext);
+
+  //usamos el contexto del CartContext para obtener el numero de items del carrito
+  const { numberOfItems } = useContext(CartContext);
 
   //usamos un useState para manejar la busqueda de productos
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,8 +127,8 @@ export const Navbar = () => {
         <NextLink href="/cart" passHref>
           <Link>
             <IconButton>
-              {/* el Badge es para colocar los numeros arriba */}
-              <Badge badgeContent={2} color="secondary">
+              {/* el Badge es para colocar los numeros arriba usamos del context del CartContext importado arriba el numberOfItems */}
+              <Badge badgeContent={ numberOfItems > 9 ? '+9' : numberOfItems } color="secondary">
                 <ShoppingCartOutlined />
               </Badge>
             </IconButton>

@@ -18,11 +18,19 @@ interface Props {
 //y el return 
 export interface CartState {
     cart: ICartProduct[];
+    numberOfItems: number,
+    subTotal: number,
+    tax: number,
+    total: number
 }
 
 //usamos la interfaz creada arriba para el estado inicial
 const CART_INITIAL_STATE: CartState = {
-    cart: []
+    cart: [],
+    numberOfItems: 0,
+    subTotal: 0,
+    tax: 0,
+    total: 0
 }
 
 export const CartProvider: FC<Props> = ({ children }) => {
@@ -64,6 +72,36 @@ export const CartProvider: FC<Props> = ({ children }) => {
     }, [state.cart])
 
 
+    //usamos otro useEffect aunque la dependencia sea la misma, state.cart, como va a hacer funciones distintas React recomienda usar
+    //diferentes useEffect para funciones distintas, este efecto se encargara de manejar el numero de items, el total a pagar los impuestos
+    //y el subtotal
+    useEffect(() => {
+
+        //usamos la funciom de javascript reduce para contar todos los items totales del state.cart( ver funcionamiento reducer ), el cero del final es el valor por el que empieza
+        //prev es el valor anterior( de inicio es cero), current es el propio objeto y luego lo que hacemos es de cada uno de los objetos sumar el valor anterior, empezando por cero
+        const numberOfItems = state.cart.reduce((prev, current) => current.quantity + prev, 0)
+
+        //usamos de nuevo el reducer para calcular el subtotal que sera el precio por las cantidades que lleva cada producto mas el valor anterior del calculo de los otros productos, de inicio es cero
+        const subTotal = state.cart.reduce((prev, current) => (current.price * current.quantity) + prev, 0)
+
+        //el taxRate es el IVA del 21% lo tomamos de las variables de entorno al comenzar por NEXT_PUBLIC
+        //hacemos que se puede ver en el frontend, lo ponemos en Number para transformarlo a number ya que de
+        //las variables viene como string en caso de que no exista la variable devuelve cero
+        const taxRate = Number(process.env.NEXT_PUBLIC_TAX_RATE || 0);
+
+        //objeto que contiene todos los calculos anteriores
+        const orderSummary = {
+            numberOfItems,
+            subTotal,
+            tax: subTotal * taxRate,
+            total: subTotal * (taxRate + 1)
+        }
+
+        dispatch({ type:'[Cart] - Update order summary', payload:orderSummary});
+
+    }, [state.cart])
+
+
     const addProductToCart = (product: ICartProduct) => {
 
         //some devuelve un valor booleano estamos evaluando si en el state ya existe un producto con el mismo id
@@ -95,8 +133,16 @@ export const CartProvider: FC<Props> = ({ children }) => {
 
         //hacemos el dispatch añadiendo el nuevo estado
         dispatch({ type: '[Cart] - Update products in cart', payload: updatedProducts })
+    }
 
+    //metodo para actualizar la cantidad del producto cuando en el carrito se quiere cambiar la cantidad seleccionada
+    const updateCartQuantity = (product: ICartProduct) => {
+        dispatch({ type: '[Cart] - Change cart quantity', payload: product });
+    }
 
+    const removeCartProduct = (product: ICartProduct) => {
+
+        dispatch({ type: '[Cart] - Remove product in cart', payload: product })
     }
 
     return (
@@ -107,7 +153,9 @@ export const CartProvider: FC<Props> = ({ children }) => {
             ...state,
 
             //Metodos
-            addProductToCart
+            addProductToCart,
+            updateCartQuantity,
+            removeCartProduct
         }}>
             { children}
         </CartContext.Provider>

@@ -1,33 +1,40 @@
 import NextLink from 'next/link'
 
 import { Box, Button, CardActionArea, CardMedia, Grid, Typography } from '@mui/material';
-import { initialData } from '../../database/products';
 import { ItemCounter } from '../ui';
-import { FC } from 'react';
+import { FC, useContext } from 'react';
+import { CartContext } from '../../context/cart/CartContext';
+import { ICartProduct } from '../../interfaces/cart';
 
-const productsInCart = [
-    initialData.products[0],
-    initialData.products[1],
-    initialData.products[2],
-]
 
 interface Props {
     editable?: boolean;
 }
 
 export const CartList: FC<Props> = ({ editable = false }) => {
+
+    //usamos useContext para obterner atributos y metodos del contexto CartContext
+    const { cart, updateCartQuantity , removeCartProduct} = useContext(CartContext);
+
+    //funcion para cambiar los valores del producto en la pagina del carrito
+    const onNewQuantityValue = ( product: ICartProduct, newQuantityValue: number) => {
+
+        product.quantity = newQuantityValue; //variamos la cantidad
+        updateCartQuantity(product); //llamamos a la funcion obtenida arriba del contexto CartContext
+    }
+
     return (
         <>
             {
-                productsInCart.map(product => (
-                    <Grid container spacing={2} sx={{ mb: 1 }} key={product.slug}>
+                cart.map(product => (
+                    <Grid container spacing={2} sx={{ mb: 1 }} key={product.slug + product.size}> 
                         {/* dividimos los grid a lo ancho con 3,3 y 2  */}
                         <Grid item xs={3}>
                             {/* llevar a la pagina del producto */}
-                            <NextLink href="/product/slug" passHref>
+                            <NextLink href= { `/product/${ product.slug }`} passHref>
                                 <CardActionArea>
                                     <CardMedia
-                                        image={`/products/${product.images[0]}`}
+                                        image={`/products/${product.image}`}
                                         component='img'
                                         sx={{ borderRadius: '5px' }}
                                     />
@@ -37,7 +44,7 @@ export const CartList: FC<Props> = ({ editable = false }) => {
                         <Grid item xs={7}>
                             <Box display='flex' flexDirection='column'>
                                 <Typography variant='body1'> {product.title}</Typography>
-                                <Typography variant='body1'>Talla: <strong>M</strong></Typography>
+                                <Typography variant='body1'>Talla: <strong> {product.size}</strong></Typography>
 
                                 {/* Condicional si es editable, constante recivida por Props, mostramos el componente
                                 ItemCounter en caso contrario el typography con la informacion*/}
@@ -45,8 +52,19 @@ export const CartList: FC<Props> = ({ editable = false }) => {
                                 {/* Importamos el ItemCounter de components/ui */}
                                 {
                                     editable
-                                        ? <h1>h</h1>
-                                        : <Typography variant='h5'>3 items</Typography>
+                                        ? (
+
+                                            <ItemCounter
+                                                currentValue={product.quantity}
+                                                maxValue={10} //le ponemos un valor para obtener las existencias del producto tendiramos que hacer una peticion al backend
+                                                updateQuantity={ ( value ) => onNewQuantityValue ( product, value)} //mandamos a la funcion el product para cambiar la nueva cantidad y el value que es valor que obtenemos de updateQuantity de components/ui/ItemCounter
+                                            />
+                                        )
+                                        : (
+                                            <Typography variant='h5'> { product.quantity } { product.quantity >1 ? 'productos' : 'producto'}</Typography>
+                                        )
+
+
                                 }
 
 
@@ -59,9 +77,12 @@ export const CartList: FC<Props> = ({ editable = false }) => {
                             se muestra o no*/}
                             {
                                 editable && (
-                                    <Button variant='text' color='secondary'> Remover</Button>
+                                    <Button 
+                                    variant='text' 
+                                    color='secondary'
+                                    onClick = { () => removeCartProduct (product)} //llamamos a la funcion del context CartContext importado arriba
+                                    > Eliminar</Button>
                                 )
-                                   
                             }
 
                         </Grid>
