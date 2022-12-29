@@ -6,11 +6,14 @@ import { useForm } from 'react-hook-form';
 
 import NextLink from 'next/link';
 
-import { Box, Button, Grid, TextField, Typography, Link } from '@mui/material';
+import { Box, Button, Grid, TextField, Typography, Link, Chip } from '@mui/material';
 import React from 'react';
 import { AuthLayout } from '../../components/layouts';
 import { validations } from '../../utils';
-import { tesloApi } from '../../api';
+import { ErrorOutline } from '@mui/icons-material';
+import { useState, useContext } from 'react';
+import { AuthContext } from '../../context/auth/AuthContext';
+import { useRouter } from 'next/router';
 
 //type que usamos para el useForm importado arriba para manejar el formulario
 type FormData = {
@@ -21,20 +24,38 @@ type FormData = {
 
 const LoginPage = () => {
 
+
+   //importamos useRouter para navegar entre paginas
+   const router = useRouter()
+
+   //usamos el Hook importado arriba useForm
    const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
+   //usamos el useState para controlar cuaando mostrar los errores de validacion del usuario
+   const [showEror, setShowEror] = useState(false);
+
+   //usamos el contexto de AuthContext para recibir el estado y metodos de la autenticacion
+   const { loginUser } = useContext(AuthContext);
+
    //funcion para hacer peticones http, usamos axios creado en api/tesloApi
-   const onLoginUser = async({ email, password}: FormData) => {
-      
-      try {
-         //usando axios importado api/tesloApi hacemos un post a la ruta de pages/api/user/login
-         //y mandamos los datos a postear
-         const { data } = await tesloApi.post('/user/login',{ email, password});
-         const { token, user } = data; //recibimos el token y el user de la data recibida
-         console.log({ token, user})
-      } catch (error) {
-         console.log('Error en las credenciales ')
+   const onLoginUser = async ({ email, password }: FormData) => {
+
+      setShowEror(false); //usamos el useState de arriba
+
+      //usamos la funcion loginUser del AuthContext importado arriba que devuelve true o false para saber si el login ha sido correcto
+      const isValidLogin = await loginUser(email, password);
+
+      //si devuelve false el login ha fallado y mandamos un mensaje de error
+      if (!isValidLogin) {
+         setShowEror(true); //usamos el useState de arriba para ponerlo en true y muestre el error en el componente Chip implementado abajo
+         //pasados 3 segundos dejamos de mostrarlo
+         setTimeout(() => setShowEror(false), 3000);
+         return;
       }
+
+      //navegar a la pagina home o a la ultima pagina visitada si se pide autenticacion si todo sale bien
+      router.replace('/'); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+      
    }
 
 
@@ -51,6 +72,14 @@ const LoginPage = () => {
                   {/* ponemos xs=12 para que ocupe todo el ancho del Grid al ser xs la medida mas pequeña todos los formatos seran 12 */}
                   <Grid item xs={12}>
                      <Typography variant='h1' component='h1'>Iniciar Sesión</Typography>
+
+                     <Chip
+                        label="No reconocemos ese usario / contraseña"
+                        color="error"
+                        icon={<ErrorOutline />}
+                        className="fadeIn"
+                        sx={{ display: showEror ? 'flex' : 'none' }} //mostramos este componente si showError del useState de arriba esta en true
+                     />
                   </Grid>
 
                   <Grid item xs={12}>
@@ -66,7 +95,7 @@ const LoginPage = () => {
                            //podriamos quitar el argumento y que quedara validations.isEmail simplemente, ya que si el primer argumento de la funcion es el primer argumento
                            //de la funcion ha que va a llamar no es necesario ponerlo
                            //llamamos a la funcion isEmail de utils/validations para que valide el email de la misma forma que hizimos en el backend
-                           validate: (val)=> validations.isEmail(val) 
+                           validate: (val) => validations.isEmail(val)
 
                         })}
                         //utilizamos error de Material Ui y entre llaves el error del Hook useForm de arriba para que muestre los errores
