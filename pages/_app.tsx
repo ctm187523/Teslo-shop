@@ -3,7 +3,7 @@ import type { AppProps } from 'next/app'
 import { lightTheme } from '../themes'
 import { CssBaseline, ThemeProvider } from '@mui/material'
 import { SWRConfig } from 'swr';
-import { UiProvider } from '../context';
+import { AuthProvider, CartProvider, UiProvider } from '../context';
 
 
 export default function App({ Component, pageProps }: AppProps) {
@@ -15,16 +15,20 @@ export default function App({ Component, pageProps }: AppProps) {
         fetcher: (resource, init) => fetch(resource, init).then(res => res.json())
       }}
     >
-      {/* usamos el context UiProvider de context/ui/UiProvider */}
-      <UiProvider>
-        {/* colocamos el ThemeProvider de material UI, como theme usamos los creados en la carpeta themes */}
-        <ThemeProvider theme={lightTheme}>
-          <CssBaseline />
-          <Component {...pageProps} />
-        </ThemeProvider>
-      </UiProvider>
+      {/* usamos el contexto del AuthProvider para manejar el estado de la autenticacion */}
+      <AuthProvider>
+        {/* usamos el context CartProvider para manejar el estado del carrito */}
+        <CartProvider>
+          {/* usamos el context UiProvider de context/ui/UiProvider */}
+          <UiProvider>
+            {/* colocamos el ThemeProvider de material UI, como theme usamos los creados en la carpeta themes */}
+            <ThemeProvider theme={lightTheme}>
+              <CssBaseline />
+              <Component {...pageProps} />
+            </ThemeProvider>
+          </UiProvider>
+        </CartProvider>
+      </AuthProvider>
     </SWRConfig>
-
   )
-
 }
