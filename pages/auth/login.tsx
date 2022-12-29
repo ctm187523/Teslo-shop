@@ -10,6 +10,7 @@ import { Box, Button, Grid, TextField, Typography, Link } from '@mui/material';
 import React from 'react';
 import { AuthLayout } from '../../components/layouts';
 import { validations } from '../../utils';
+import { tesloApi } from '../../api';
 
 //type que usamos para el useForm importado arriba para manejar el formulario
 type FormData = {
@@ -22,9 +23,18 @@ const LoginPage = () => {
 
    const { register, handleSubmit, formState: { errors } } = useForm<FormData>();
 
-   //funcion para hacer peticones http
-   const onLoginUser = (data: FormData) => {
-      console.log({ data })
+   //funcion para hacer peticones http, usamos axios creado en api/tesloApi
+   const onLoginUser = async({ email, password}: FormData) => {
+      
+      try {
+         //usando axios importado api/tesloApi hacemos un post a la ruta de pages/api/user/login
+         //y mandamos los datos a postear
+         const { data } = await tesloApi.post('/user/login',{ email, password});
+         const { token, user } = data; //recibimos el token y el user de la data recibida
+         console.log({ token, user})
+      } catch (error) {
+         console.log('Error en las credenciales')
+      }
    }
 
 
