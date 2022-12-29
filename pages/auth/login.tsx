@@ -33,7 +33,7 @@ const LoginPage = () => {
          const { token, user } = data; //recibimos el token y el user de la data recibida
          console.log({ token, user})
       } catch (error) {
-         console.log('Error en las credenciales')
+         console.log('Error en las credenciales ')
       }
    }
 
