@@ -1,6 +1,6 @@
 
 //instalamos json web token(jwt) con --> yarn add jsonwebtoken
-//para el tipado con typescript usamos el -D es para indicar que es de desarrolo no de produccion --> yarn add -D @types/jsonwebtoken
+//para el tipado con typescript --> yarn add -D @types/jsonwebtoken   usamos el -D es para indicar que es de desarrolo no de produccion 
 import jwt from 'jsonwebtoken'
 
 //funcion para generar jsonwebtoken, jwt no trabaja con promesas trabaja con callbacks
@@ -32,9 +32,14 @@ export const signToken = (_id: string, email: string) => {
 //funcion para ver si un token es valido recibe el token como string y devuelve una Promesa
 export const isValidToken = (token: string): Promise<string> => {
 
-    //nos aseguramos que la variable para el jwt este creada
+    //nos aseguramos que la variable para el jwt este creado
     if (!process.env.JWT_SECRET_SEED) {
         throw new Error('No hay semilla de JWT - Revisar variables de entorno')
+    }
+
+    //comprovamos si el token es valido si tiene menos de 10 caracteres no es valido ya que lo token tienen siempre mas caracteres
+    if( token.length <= 10 ) {
+        return Promise.reject('JWT no es valiodo'); //retornamos una promesa que es lo que pide la funcion
     }
 
     return new Promise((resolve, reject) => {

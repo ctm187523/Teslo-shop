@@ -5,6 +5,7 @@ import { AuthContext, authReducer } from './'
 import tesloApi from '../../api/tesloApi';
 import Cookies from 'js-cookie';
 import axios from 'axios';
+import { useRouter } from 'next/router';
 
 
 //creamos una interfaz para el tipado de las propiedades a compartir, lo
@@ -27,6 +28,9 @@ export const AuthProvider: FC = ({ children }) => {
     //Auth_INITIAL_STATE, como reducer usamos el reducer creado AuthReducer
     const [state, dispatch] = useReducer(authReducer, Auth_INITIAL_STATE);
 
+    //importamos el Hook useRouter de Next 
+    const router = useRouter();
+
 
     //usamos un useEffect para que se dispare una sola vez al cargar este componente y llame 
     //a la funcion checkToken de abajo
@@ -41,9 +45,14 @@ export const AuthProvider: FC = ({ children }) => {
     //y no se pierdan al refrescar la pagina
     const checkToken = async () => {
 
+        //comprobamos que hay un token en las Cookies, en caso de que no lo haya salimos del metodo
+        if ( !Cookies.get('token')) { 
+            return;
+        } 
+
         try {
 
-            //llamar al endpoint para validar el token alojado en la Cookies, ver el endpoint ya se encarga de llamar a las Cookies
+            //llamar al endpoint para validar el token alojado en la Cookies, ver el endpoint /user/validate-token' ya se encarga de llamar a las Cookies 
             const { data } = await tesloApi.get('/user/validate-token');
             const { token, user } = data; //recibimos un nuevo token y los datos del usuario que tenia el token anteriormente evaluado
 
@@ -125,6 +134,15 @@ export const AuthProvider: FC = ({ children }) => {
 
     }
 
+    //funcion para logout
+    const logout = () => {
+        //borramos de las Cookies el token y el carrito
+        Cookies.remove('token');
+        Cookies.remove('cart');
+
+        router.reload(); //usamos el useRouter importado arriva y con reload hacemos un refresh para limpiar todo el estado de la aplicacion
+    }
+
     return (
         //usamos el componente de Contexto(create Context) AuthContext
         //definimos el value que es lo que se compartira con el resto de componentes
@@ -135,6 +153,7 @@ export const AuthProvider: FC = ({ children }) => {
             //metodos
             loginUser,
             registerUser,
+            logout
         }}>
             { children}
         </AuthContext.Provider>

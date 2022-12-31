@@ -53,9 +53,12 @@ const LoginPage = () => {
          return;
       }
 
-      //navegar a la pagina home o a la ultima pagina visitada si se pide autenticacion si todo sale bien
-      router.replace('/'); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
-      
+      //navegar a la pagina home o a la ultima pagina visitada, en el boton del register del components/ui/SideMenu.tsx 
+      //hemos creado una query en la url donde almacena la ultima pagina visitada, si existe la tomamos y al hacer login
+      //nos dirigimos a esa pagina en caso de que no venga nos dirige al home.
+      const destination = router.query.p?.toString() || '/'
+      router.replace(destination); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+
    }
 
 
@@ -140,11 +143,21 @@ const LoginPage = () => {
                   </Grid>
 
                   <Grid item xs={12} display='flex' justifyContent='end'>
-                     <NextLink href="/auth/register" passHref>
+                     {/* utilizamos el router.query.p para obtener las querys que recibimos del boton 
+                     del register del components/ui/SideMenu.tsx, lo hacemos asi para que en la pagina de register tenga
+                     las query y de esta manera al registrarse regrese a la ultima pagina que estaba visitando ya qu en las querys
+                     tenemos la referencia de la url ultima visitada antes de hacer el registro 
+                     usamos un ternario para que si no hay querys mande a la url /aut/register sin nungna query*/}
+                     <NextLink
+                        href={ router.query.p ? `/auth/register?p=${router.query.p}`: '/auth/register'}
+                        passHref
+                     >
                         <Link underline='always'>
                            ¿No tienes cuenta?
-                     </Link>
+                        </Link>
                      </NextLink>
+
+
                   </Grid>
                </Grid>
             </Box>

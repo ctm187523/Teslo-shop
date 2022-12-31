@@ -2,6 +2,7 @@
 import { FC, useReducer, ReactElement, useEffect } from 'react';
 import { CartContext, cartReducer } from './'
 import { ICartProduct } from '../../interfaces/cart';
+import Cookies from 'js-cookie';
 
 //he instalado para manejar las cookies desde el frontend --> yarn add js-cookie
 //para el backend yo lo hace sin instalar nada
@@ -17,20 +18,38 @@ interface Props {
 //usamos para tipar el estado inicial y en el ./cartReducers para tipar el state
 //y el return 
 export interface CartState {
+    isLoaded: boolean;
     cart: ICartProduct[];
     numberOfItems: number,
     subTotal: number,
     tax: number,
-    total: number
+    total: number,
+
+    //tomado de pages/checkout/address, puede ser opcional
+    //porque son los valores que recibimos de las Cookies
+    shippingAddress?: ShippingAddress;
+}
+
+export interface ShippingAddress {
+    firstName: string;
+    lastName: string;
+    address: string;
+    address2?: string;
+    zip: string;
+    city: string;
+    country: string;
+    phone: string;
 }
 
 //usamos la interfaz creada arriba para el estado inicial
 const CART_INITIAL_STATE: CartState = {
+    isLoaded: false,
     cart: [],
     numberOfItems: 0,
     subTotal: 0,
     tax: 0,
-    total: 0
+    total: 0,
+    shippingAddress: undefined
 }
 
 export const CartProvider: FC<Props> = ({ children }) => {
@@ -97,9 +116,32 @@ export const CartProvider: FC<Props> = ({ children }) => {
             total: subTotal * (taxRate + 1)
         }
 
-        dispatch({ type:'[Cart] - Update order summary', payload:orderSummary});
+        dispatch({ type: '[Cart] - Update order summary', payload: orderSummary });
 
-    }, [state.cart])
+    }, [state.cart]);
+
+
+    //creamos un useEffect para cuando se recargue la pagina obtenga de las Cookies en el state
+    //toda la informacion sobre la direccion de envio, 
+    useEffect(() => {
+
+        //nos aseguramos antes de hacer el dispatch que en las Cookies haya informacion
+        if (Cookie.get('firstName')) {
+            const shippingAddress = {
+                firstName: Cookies.get('firstName') || '',
+                lastName: Cookies.get('lastName') || '',
+                address: Cookies.get('address') || '',
+                address2: Cookies.get('address2') || '',
+                zip: Cookies.get('zip') || '',
+                city: Cookies.get('city') || '',
+                country: Cookies.get('country') || '',
+                phone: Cookies.get('phone') || '',
+            }
+
+            dispatch({ type: '[Cart] - LoadAddress from Cookies', payload: shippingAddress })
+        }
+
+    }, []);
 
 
     const addProductToCart = (product: ICartProduct) => {
@@ -140,9 +182,26 @@ export const CartProvider: FC<Props> = ({ children }) => {
         dispatch({ type: '[Cart] - Change cart quantity', payload: product });
     }
 
+    //funcion para borrar los productos del carrito
     const removeCartProduct = (product: ICartProduct) => {
 
         dispatch({ type: '[Cart] - Remove product in cart', payload: product })
+    }
+
+    //funcion para actualizar la direccion de envio
+    const updateAddress = ( address: ShippingAddress) => {
+
+         //grabamos cada uno de los valores del formulario en las cookies
+         Cookies.set('firstName', address.firstName);
+         Cookies.set('lastName', address.lastName);
+         Cookies.set('address', address.address);
+         Cookies.set('address2', address.address2 || '');
+         Cookies.set('zip', address.zip);
+         Cookies.set('city', address.city);
+         Cookies.set('country', address.country);
+         Cookies.set('phone', address.phone);
+
+        dispatch({ type:'[Cart] - Update Address', payload:address});
     }
 
     return (
@@ -155,7 +214,9 @@ export const CartProvider: FC<Props> = ({ children }) => {
             //Metodos
             addProductToCart,
             updateCartQuantity,
-            removeCartProduct
+            removeCartProduct,
+            updateAddress
+
         }}>
             { children}
         </CartContext.Provider>
