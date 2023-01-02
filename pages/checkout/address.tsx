@@ -1,4 +1,4 @@
-import { Box, Button, FormControl, Grid,  MenuItem,  TextField, Typography } from '@mui/material'
+import { Box, Button, FormControl, Grid, MenuItem, TextField, Typography } from '@mui/material'
 import React from 'react'
 import { ShopLayout } from '../../components/layouts'
 import { countries } from '../../utils';
@@ -10,7 +10,7 @@ import Cookies from 'js-cookie';
 //para manejar los formularios, validaciones etc
 import { useForm } from 'react-hook-form';
 import { useRouter } from 'next/router';
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { CartContext } from '../../context/cart/CartContext';
 
 
@@ -49,20 +49,33 @@ const AdressPage = () => {
     const router = useRouter();
 
     //importamos el contexto del CartContext
-    const {  updateAddress } = useContext(CartContext);
+    const { updateAddress } = useContext(CartContext);
 
     //importamos el Hook useForm para manejar el formulario
-    const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
-
-        //usamos los valores tomados de las Cookies en el metodo de arriba getAddressFromCookie para ponerlos por defecto
-        //de esta manera el usuario no tiene que escribir de nuevo los valores si existen en las Cookies
-        defaultValues: getAddressFromCookies() 
+    const { register, handleSubmit, formState: { errors }, reset } = useForm<FormData>({
+        defaultValues: {
+            firstName: '',
+            lastName: '',
+            address: '',
+            address2: '',
+            zip: '',
+            city: '',
+            country: countries[0].code,
+            phone: '',
+        }
     });
+
+    //useEffect para restablecer los valores de las Cookies, como dependencia usamos el reset del useForm
+    //importado arriba
+    useEffect(() => {
+        reset(getAddressFromCookies())
+
+    }, [reset])
 
     const onSubmitAddress = async (data: FormData) => {
 
         //usamos el metodo updateAddress del contexto del cartContext para actualizar la informacion de la direccion de envio
-        updateAddress( data );
+        updateAddress(data);
 
         //enviamos a la url checkout/summary
         router.push('/checkout/summary');
@@ -159,20 +172,21 @@ const AdressPage = () => {
                     </Grid>
 
                     <Grid item xs={12} sm={6}>
-                        <FormControl fullWidth>
+                        {/* <FormControl fullWidth> */}
                             <TextField
-                                select
+                                //select
                                 variant='filled'
                                 label="País"
-                                defaultValue={ Cookies.get('country') || countries[0].code}
+                                fullWidth
+                                //defaultValue={Cookies.get('country') || countries[0].code}
                                 {...register('country', {
                                     required: 'Este campo es requerido',
                                 })}
                                 error={!!errors.country}
-                            //helperText={errors.firstName?.message}
-                            >
+                                helperText={errors.country?.message}
+                            />
                                 {/* obtenemos los paises del archivo utils/countries */}
-                                {
+                                {/* {
                                     countries.map((country) => (
                                         <MenuItem
                                             key={country.code}
@@ -181,10 +195,9 @@ const AdressPage = () => {
                                             { country.name}
                                         </MenuItem>
                                     ))
-                                }
-
-                            </TextField>
-                        </FormControl>
+                                } 
+                            </TextField> */}
+                        {/* </FormControl> */}
                     </Grid>
 
                     <Grid item xs={12} sm={6}>

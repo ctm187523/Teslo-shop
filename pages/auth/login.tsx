@@ -6,14 +6,20 @@ import { useForm } from 'react-hook-form';
 
 import NextLink from 'next/link';
 
-import { Box, Button, Grid, TextField, Typography, Link, Chip } from '@mui/material';
+import { Box, Button, Grid, TextField, Typography, Link, Chip, Divider } from '@mui/material';
 import React from 'react';
 import { AuthLayout } from '../../components/layouts';
 import { validations } from '../../utils';
 import { ErrorOutline } from '@mui/icons-material';
-import { useState, useContext } from 'react';
+import { useState, useContext, useEffect } from 'react';
 import { AuthContext } from '../../context/auth/AuthContext';
 import { useRouter } from 'next/router';
+
+//usamos next auth
+import { getSession, signIn , getProviders} from 'next-auth/react'
+import { GetServerSideProps } from 'next';
+
+
 
 //type que usamos para el useForm importado arriba para manejar el formulario
 type FormData = {
@@ -34,30 +40,51 @@ const LoginPage = () => {
    //usamos el useState para controlar cuaando mostrar los errores de validacion del usuario
    const [showEror, setShowEror] = useState(false);
 
+   //usamos un useState para poder manejar los provides del next auth
+   const [providers, setProviders] = useState<any>({})
+
+   //usamos un useEffect para usar el metodo getProvides importado arriba de next auth
+   //este metodo devuelve una promesa
+   useEffect(() => {
+        
+      getProviders().then( prov => {
+         setProviders(prov); //usamos el setProviders del useState de arriba para mandar los providers, el credentials lo ignoramos porque es el que usamos para loguearse sin usar ningun provider
+      })
+           
+   }, [])
+
    //usamos el contexto de AuthContext para recibir el estado y metodos de la autenticacion
-   const { loginUser } = useContext(AuthContext);
+   //LO COMENTAMOS PORQUE USAMOS NEXT AUTH
+   //const { loginUser } = useContext(AuthContext);
 
    //funcion para hacer peticones http, usamos axios creado en api/tesloApi
    const onLoginUser = async ({ email, password }: FormData) => {
 
       setShowEror(false); //usamos el useState de arriba
 
+      //COMENTAMOS TODO EL CODIGO DE ABAJO PORQUE LO HACEMOS AHORA CON NEXT AUTH
+
       //usamos la funcion loginUser del AuthContext importado arriba que devuelve true o false para saber si el login ha sido correcto
-      const isValidLogin = await loginUser(email, password);
+      //const isValidLogin = await loginUser(email, password);
 
       //si devuelve false el login ha fallado y mandamos un mensaje de error
-      if (!isValidLogin) {
-         setShowEror(true); //usamos el useState de arriba para ponerlo en true y muestre el error en el componente Chip implementado abajo
-         //pasados 3 segundos dejamos de mostrarlo
-         setTimeout(() => setShowEror(false), 3000);
-         return;
-      }
+      // if (!isValidLogin) {
+      //    setShowEror(true); //usamos el useState de arriba para ponerlo en true y muestre el error en el componente Chip implementado abajo
+      //    //pasados 3 segundos dejamos de mostrarlo
+      //    setTimeout(() => setShowEror(false), 3000);
+      //    return;
+      // }
 
       //navegar a la pagina home o a la ultima pagina visitada, en el boton del register del components/ui/SideMenu.tsx 
       //hemos creado una query en la url donde almacena la ultima pagina visitada, si existe la tomamos y al hacer login
       //nos dirigimos a esa pagina en caso de que no venga nos dirige al home.
-      const destination = router.query.p?.toString() || '/'
-      router.replace(destination); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+      // const destination = router.query.p?.toString() || '/'
+      // router.replace(destination); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+
+      //USAMOS NEXT AUTH, utilizamos el metodo signIn de next auth usamos la configuracion del archivo api/auth/[...nextauth].ts
+      //tomamos el credentials que es la configuracion personalizada sin usar redes sociales y tomamos el email y el password
+      await signIn('credentials',{ email, password});
+
 
    }
 
@@ -156,8 +183,32 @@ const LoginPage = () => {
                            ¿No tienes cuenta?
                         </Link>
                      </NextLink>
+                  </Grid>
 
+                  <Grid item xs={12} display='flex' flexDirection='column' justifyContent='end'>
+                     <Divider sx={{ width: '100%', mb: 2}}/>
+                     {/* usamos los providers obtenidos arriba en el useState para colocarlos en la interfaz del login 
+                     para barrerlo usamos Object.values ya que para usar directamente providers.map deberia de ser un arreglo
+                     y de esta manera obtenemos todos los valores de un objeto*/}
+                     {
+                        Object.values( providers ).map( (provider: any) => {
 
+                           //si el provider.id es credentials retornamos un div vacio
+                           if( provider.id === 'credentials') return <div key="credentials"></div>; 
+                           return (
+                              <Button
+                                 key={ provider.id}
+                                 variant='outlined'
+                                 fullWidth
+                                 color="primary"
+                                 sx={{ mb:1}}
+                                 onClick={ ()=> signIn( provider.id)} //para el onclik usamos el signIn de next auth
+                              >
+                                 { provider.name}
+                              </Button>
+                           )
+                        })
+                     }
                   </Grid>
                </Grid>
             </Box>
@@ -165,6 +216,41 @@ const LoginPage = () => {
 
       </AuthLayout>
    )
+}
+
+
+//usamos ServerSideRendering  para trabajar del lado del servidor, cuando alguien solicite
+//esta pagina va a venir precargada con la informacion del lado del servidor, 
+export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+
+   //usamos el metodo getSession  de la importacion de arriba de next auth
+   //como parametro hemos desestructurado el contexto (ctx) para obtener el request(req)
+   const session = await getSession( { req });
+
+   //del contexot(ctx) hemos desestructurado tambien le query que lo usaremos para ver la query
+   //que nos informa en que pagina ultima estaba el usuario antes de salir a loguearse, si
+   //no viene la query redirigimos al home
+   const { p='/'} = query;
+
+   //si ya tenemos una session abierta no pasamos por el login y lo dirigimos directamente a la ultima
+   //pantalla visitada usando la query(q) como string
+   if( session ){
+      return{
+         redirect: {
+            destination: p.toString(),
+            permanent: false
+         }
+         
+      }
+   }
+   
+   //si no tenemos usa session abierta devolvemos la props en este caso vacias
+   return {
+       //las props son enviadas a este componente ProductPage por parametros
+       props: {
+           
+       }
+   }
 }
 
 export default LoginPage

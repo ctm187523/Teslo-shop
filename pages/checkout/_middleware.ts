@@ -3,6 +3,8 @@
 import { NextFetchEvent, NextRequest, NextResponse } from "next/server";
 import { jwt } from "../../utils";
 
+import { getToken } from 'next-auth/jwt'
+
 
 //usamos un middleware se pone siempre asi _middleware con el guion bajo
 //para que Next lo reconozca, el middleware esta ubicado en el directorio checkout
@@ -14,29 +16,50 @@ import { jwt } from "../../utils";
 
 
 //como argumentos tiene la request(req) y un evento, los tipamos
-export async function middleware ( req: NextRequest, ev:NextFetchEvent) {
+export async function middleware ( req: NextRequest | any, ev:NextFetchEvent) {
+
+
+      //COMENTAMOS TODO LO DE ABAJO PORQUE USAMOS NEXT AUTH
+
 
     //obtenemos el token de las cookies con el argumento req(request)
-    const { token = '' } = req.cookies;
+    //const { token = '' } = req.cookies;
 
     //utilizamos el Objeto Response de Javascript para modificar la respuesta ver video 286 minuto 4:30 aprox
     //lo comentamos es solo como ejemplo como modifica la pagina
     //return new Response( 'Token: ' +token);
 
-    try {
+  
+    // try {
         
-        await jwt.isValidToken( token ); //evaluamos el token si es valido
-        return NextResponse.next(); //si es valido pasamos a la siguiente pagina
-    } catch (error) {
+    //     await jwt.isValidToken( token ); //evaluamos el token si es valido
+    //     return NextResponse.next(); //si es valido pasamos a la siguiente pagina
+    // } catch (error) {
 
-        //comentamos lo de abajo aunque funcionaria porque lo haremos usando Next que es lo recomendado
-        //return Response.redirect('/auth/login');
+    //     //comentamos lo de abajo aunque funcionaria porque lo haremos usando Next que es lo recomendado
+    //     //return Response.redirect('/auth/login');
 
-        //obtenemos la query de la ultima pagina visitada
+    //     //obtenemos la query de la ultima pagina visitada
+    //     const requestPage = req.page.name;
+    //     //si el token no es valido sacamos al usuario a la url /auth/login, mandandole la query de la ultima pagina visitada
+    //     return NextResponse.redirect(`/auth/login?p=${ requestPage }`);
+        
+    // }
+
+    //USAMOS NEXT AUTH, usamos el metodo importado arriba getToken de next auth
+    //como argumentos tenemos la request y del archivo .env la clave secreta
+    const session = await getToken( { req , secret: process.env.NEXTAUTH_SECRET});
+
+    //console.log( {session})
+
+    //si no existe una session, el usuario no esta autenticado lo enviamos al home pasandole la query
+    //de la url donde se encontraba
+    if( !session) {
         const requestPage = req.page.name;
-        //si el token no es valido sacamos al usuario a la url /auth/login, mandandole la query de la ultima pagina visitada
-        return NextResponse.redirect(`/auth/login?p=${ requestPage }`);
-        
+        return NextResponse.redirect(`/auth/login?p=${requestPage}`); 
     }
+
+    //si tenemos una session redirigimos a las paginas que le preceden al middleware
+    return NextResponse.next();
 
 }

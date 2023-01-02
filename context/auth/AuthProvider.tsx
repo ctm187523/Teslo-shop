@@ -6,6 +6,8 @@ import tesloApi from '../../api/tesloApi';
 import Cookies from 'js-cookie';
 import axios from 'axios';
 import { useRouter } from 'next/router';
+import { useSession, signOut} from "next-auth/react";
+
 
 
 //creamos una interfaz para el tipado de las propiedades a compartir, lo
@@ -31,43 +33,65 @@ export const AuthProvider: FC = ({ children }) => {
     //importamos el Hook useRouter de Next 
     const router = useRouter();
 
+    //usamos el Hook useSession de nextauth instalado ver video 299 para leer toda la
+    //informacion del cliente loggueado a traves de un proveedor(en este caso GitHub)
+    //desestructuramos y obtenemos la data y es status
+    const { data, status} = useSession();
+    
+
 
     //usamos un useEffect para que se dispare una sola vez al cargar este componente y llame 
     //a la funcion checkToken de abajo
+    //LO COMENTAMOS PORUQE USAMOS EN LUGAR DE DE NUESTRA PERSONAL AUTENTICACION USAMOS NEXT AUTH
+    //EL CODIGO DE NEXT AUTH ESTA EN EL USE EFFECT DE ABAJO
+    // useEffect(() => {
+
+    //     checkToken();
+
+    // }, [])
+
+    //usamos el useEffect para que cada vez que cambie el status y la data como dependencias,
+    //revise el status obtenido del  hook del useAuth useSession creado arriba
     useEffect(() => {
-
-        checkToken();
-
-    }, [])
+        
+        //recibimos el status gracias al hook de next auth useSession implementado arriba
+        if( status === 'authenticated') {
+            //recibimos la data?.user gracias al hook de next auth useSession implementado arriba
+            dispatch( { type: '[Auth] - Login', payload: data?.user as IUser })
+        }
+        
+    }, [status, data])
 
     //funcion que se encarga cada vez que se refresca la pagina o se sale
     //se valida el token para que se registren los datos del logout del usuario
     //y no se pierdan al refrescar la pagina
-    const checkToken = async () => {
+    //NO USAMOS ESTA FUNCION PORQUE DE DONDE ERA LLAMADA ESTA COMENTADO PORQUE 
+    //EN SU LUGAR USAMOS NEXTAUTH
+    // const checkToken = async () => {
 
-        //comprobamos que hay un token en las Cookies, en caso de que no lo haya salimos del metodo
-        if ( !Cookies.get('token')) { 
-            return;
-        } 
+    //     //comprobamos que hay un token en las Cookies, en caso de que no lo haya salimos del metodo
+    //     if (!Cookies.get('token')) {
+    //         return;
+    //     }
 
-        try {
+    //     try {
 
-            //llamar al endpoint para validar el token alojado en la Cookies, ver el endpoint /user/validate-token' ya se encarga de llamar a las Cookies 
-            const { data } = await tesloApi.get('/user/validate-token');
-            const { token, user } = data; //recibimos un nuevo token y los datos del usuario que tenia el token anteriormente evaluado
+    //         //llamar al endpoint para validar el token alojado en la Cookies, ver el endpoint /user/validate-token' ya se encarga de llamar a las Cookies 
+    //         const { data } = await tesloApi.get('/user/validate-token');
+    //         const { token, user } = data; //recibimos un nuevo token y los datos del usuario que tenia el token anteriormente evaluado
 
-            //al llamar al endpoint /user/validate-token se crea un nuevo token lo guardamos en las Cookies
-            Cookies.set('token', token);
+    //         //al llamar al endpoint /user/validate-token se crea un nuevo token lo guardamos en las Cookies
+    //         Cookies.set('token', token);
 
-             //dispatch de login mandamos el user para que se mantenga en el state y de esta manera no se pierde al refrescar la pagina
-            dispatch({ type: '[Auth] - Login', payload: user });
+    //         //dispatch de login mandamos el user para que se mantenga en el state y de esta manera no se pierde al refrescar la pagina
+    //         dispatch({ type: '[Auth] - Login', payload: user });
 
-        } catch (error) {
+    //     } catch (error) {
 
-            Cookies.remove('token');
+    //         Cookies.remove('token');
 
-        }
-    }
+    //     }
+    // }
 
     //funcion para verificar si el usuario ha echo login devuelve una promesa, como es async devuelve una promes
     //es de tipo boolean el valor de la promesa devuelta, true autenticado, false no autenticado
@@ -136,11 +160,26 @@ export const AuthProvider: FC = ({ children }) => {
 
     //funcion para logout
     const logout = () => {
-        //borramos de las Cookies el token y el carrito
-        Cookies.remove('token');
+        //borramos el carrito
+        
         Cookies.remove('cart');
 
-        router.reload(); //usamos el useRouter importado arriva y con reload hacemos un refresh para limpiar todo el estado de la aplicacion
+        //borramos cada uno de los valores del formulario en las cookies
+        Cookies.remove('firstName');
+        Cookies.remove('lastName');
+        Cookies.remove('address');
+        Cookies.remove('address2');
+        Cookies.remove('zip');
+        Cookies.remove('city');
+        Cookies.remove('country');
+        Cookies.remove('phone');
+
+        //Estas dos instrucciones de abajo las borramos porque next auth ya se encarga de hacerlo
+        //Cookies.remove('token');
+        //router.reload(); //usamos el useRouter importado arriva y con reload hacemos un refresh para limpiar todo el estado de la aplicacion
+
+        //usamos signOut de nextauth importado arriba para hacer el logout
+        signOut();
     }
 
     return (

@@ -4,16 +4,28 @@ import { Box, Button, Card, CardContent, Divider, Grid, Typography, Link } from 
 import React from 'react'
 import { CartList, OrderSummary } from '../../components/cart'
 import { ShopLayout } from '../../components/layouts'
-import { useContext } from 'react';
+import { useContext, useEffect } from 'react';
 import { CartContext } from '../../context/cart/CartContext';
 import { countries } from '../../utils';
-
+import Cookies from 'js-cookie';
+import { useRouter} from 'next/router';
 
 const SummaryPage = () => {
 
+    const router = useRouter();
     //usamos el contexto del CartContext
     const { numberOfItems, shippingAddress } = useContext(CartContext)
 
+    //con el useEffect nos aseguramos que haya un firstame en las Cookies eso quiere decir
+    //que ha echo anteriormente el shippingAdress insertando las direcciones de envio
+    // en checkout/address, como dependencia ponemos el router
+    useEffect(() => {
+        
+        //si en las Cookies no esta el firstname lo dirigimos a checkout/address
+       if( !Cookies.get('firstName')){
+            router.push('/checkout/address');
+       }  
+    }, [ router ])
     //si el shippingAddress esta vacio
     if(!shippingAddress) {
         return <></>;
@@ -56,7 +68,8 @@ const SummaryPage = () => {
                             <Typography>{ city} {shippingAddress?.zip}</Typography>
                             {/* Importamos el array de countries de utils/countries y con find buscamos el code
                             de cada elemento del array que sea igual al country del shippingAdress extraido del useContext*/}
-                            <Typography>{ countries.find ( c => c.code === country)?.name}</Typography>
+                            {/* <Typography>{ countries.find ( c => c.code === country)?.name}</Typography> */}
+                            <Typography> { country }</Typography>
                             <Typography>{ phone}</Typography>
 
                             <Divider sx={{ my: 1 }} />

@@ -14,6 +14,8 @@ import { useState, useContext } from 'react';
 import { ErrorOutline } from '@mui/icons-material';
 import { AuthContext } from '../../context/auth/AuthContext';
 import { useRouter } from 'next/router';
+import { getSession, signIn } from 'next-auth/react';
+import { GetServerSideProps } from 'next';
 
 type FormData = {
     name: string;
@@ -58,8 +60,13 @@ const RegisterPage = () => {
         //navegar a la pagina home o a la ultima pagina visitada, 
         //nos dirigimos a esa pagina en caso de que tengamos la query recibida del login en caso de que
         //no venga nos dirige al home.
-        const destination = router.query.p?.toString() || '/'
-        router.replace(destination); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+        //BORRAMOS LAS DOS LINEAS SIGUIENTES PORQUE USAMOS NEXT AUTH
+        //const destination = router.query.p?.toString() || '/'
+        //router.replace(destination); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+
+        //USAMOS NEXT AUTH
+        //usamos signIn de next auth importado arriba para autenticarnos una vez creado el nuevo usuario
+        await signIn('credentials', { email, password})
 
     }
 
@@ -178,5 +185,39 @@ const RegisterPage = () => {
         </AuthLayout>
     )
 }
+
+//usamos ServerSideRendering  para trabajar del lado del servidor, cuando alguien solicite
+//esta pagina va a venir precargada con la informacion del lado del servidor, 
+export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+
+    //usamos el metodo getSession  de la importacion de arriba de next auth
+    //como parametro hemos desestructurado el contexto (ctx) para obtener el request(req)
+    const session = await getSession( { req });
+ 
+    //del contexot(ctx) hemos desestructurado tambien le query que lo usaremos para ver la query
+    //que nos informa en que pagina ultima estaba el usuario antes de salir a loguearse, si
+    //no viene la query redirigimos al home
+    const { p='/'} = query;
+ 
+    //si ya tenemos una session abierta no pasamos por el login y lo dirigimos directamente a la ultima
+    //pantalla visitada usando la query(q) como string
+    if( session ){
+       return{
+          redirect: {
+             destination: p.toString(),
+             permanent: false
+          }
+          
+       }
+    }
+    
+    //si no tenemos usa session abierta devolvemos la props en este caso vacias
+    return {
+        //las props son enviadas a este componente ProductPage por parametros
+        props: {
+            
+        }
+    }
+ }
 
 export default RegisterPage;

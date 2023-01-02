@@ -10,6 +10,10 @@ docker-compose up -d
 Renombrar el archivo __.env.template__  a __.env__
 completar el JWT_SECRET_SEED
 
+completar las variables para providers
+GITHUB_ID=
+GITHUB_SECRET=
+
 MongoDB URL Local:
 ```
 mongodb://localhost:27017/teslodb
@@ -26,3 +30,5 @@ yarn dev
 Llamar a:
 ```
 http://localhost:3000/api/seed con postman por ejemplo
+
+
