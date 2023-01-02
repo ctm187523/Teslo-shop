@@ -6,13 +6,16 @@ import { useContext, useState } from 'react';
 import { UiContext } from '../../context/ui/UiContext';
 
 import { useRouter } from 'next/router'
-
+import { AuthContext } from '../../context/auth/AuthContext';
 
 
 export const SideMenu = () => {
 
     //usamos el Hook useRouter de next para navegar
     const router = useRouter();
+
+    //usamos el Hool useContext para recibir el contexto de AuthContext para recibir datos de la autenticacion del usuario
+    const { isLooggedIn, user, logout } = useContext(AuthContext);
 
 
     //usamos el Hook useContext para acceder a las variables y metodos globales del contexto UiContext 
@@ -37,6 +40,8 @@ export const SideMenu = () => {
         toggleSideMenu(); //cerramos el menu usando el metodo del contexto UiContext
         router.push(url); //abrimos la pagina con la url recibida
     }
+
+
 
     return (
         <Drawer
@@ -74,14 +79,22 @@ export const SideMenu = () => {
                         />
                     </ListItem>
 
-                    <ListItem button>
+                    <ListItem
+                        // mostramos solo si el usuario esta logeado
+                        sx={{ display: isLooggedIn ? 'flex' : 'none' }}
+                        button
+                    >
                         <ListItemIcon>
                             <AccountCircleOutlined />
                         </ListItemIcon>
                         <ListItemText primary={'Perfil'} />
                     </ListItem>
 
-                    <ListItem button>
+                    <ListItem
+                        // mostramos solo si el usuario esta logeado
+                        sx={{ display: isLooggedIn ? 'flex' : 'none' }}
+                        button
+                    >
                         <ListItemIcon>
                             <ConfirmationNumberOutlined />
                         </ListItemIcon>
@@ -124,45 +137,72 @@ export const SideMenu = () => {
                         <ListItemText primary={'Niños'} />
                     </ListItem>
 
+                    {/* si esta logueado mostramos el boton de salir si no lo esta el boton de ingresar */}
+                    {
+                        isLooggedIn
+                            ? (
+                                <ListItem
+                                    onClick={logout} //funcion del contexto de AuthContext
+                                    button
+                                >
+                                    <ListItemIcon>
+                                        <LoginOutlined />
+                                    </ListItemIcon>
+                                    <ListItemText primary={'Salir'} />
+                                </ListItem>
 
-                    <ListItem button>
-                        <ListItemIcon>
-                            <VpnKeyOutlined />
-                        </ListItemIcon>
-                        <ListItemText primary={'Ingresar'} />
-                    </ListItem>
+                            ) :
+                            (
+                                <ListItem
+                                    button
+                                    // el boton de registrar nos manda al login usando la funcion creada arriba navigateTo
+                                    //pasamos como query con el signo ? usando el router importado arriba la url donde se encontraba
+                                    //en el momento de hacer el login en un argumento llamado p
+                                    onClick={() => navigateTo(`/auth/login?p=${router.asPath}`)}
+                                >
+                                    <ListItemIcon>
+                                        <VpnKeyOutlined />
+                                    </ListItemIcon>
+                                    <ListItemText primary={'Ingresar'} />
+                                </ListItem>
 
-                    <ListItem button>
-                        <ListItemIcon>
-                            <LoginOutlined />
-                        </ListItemIcon>
-                        <ListItemText primary={'Salir'} />
-                    </ListItem>
+                            )
+                    }
 
+                    {/* Admin , opciones de administrador solo se muestra si usando
+                    del contexto del AuthContext isLooggedIn en true diciendo que el
+                    usuario esta logeado y del contexto tambien tomamos el user y vemos
+                    si el role es de administrador*/}
 
-                    {/* Admin */}
-                    <Divider />
-                    <ListSubheader>Admin Panel</ListSubheader>
+                    {
+                        isLooggedIn && user?.role === 'admin' && (
+                            <>
+                                <Divider />
+                                <ListSubheader >Admin Panel </ListSubheader>
 
-                    <ListItem button>
-                        <ListItemIcon>
-                            <CategoryOutlined />
-                        </ListItemIcon>
-                        <ListItemText primary={'Productos'} />
-                    </ListItem>
-                    <ListItem button>
-                        <ListItemIcon>
-                            <ConfirmationNumberOutlined />
-                        </ListItemIcon>
-                        <ListItemText primary={'Ordenes'} />
-                    </ListItem>
+                                <ListItem button >
+                                    <ListItemIcon>
+                                        <CategoryOutlined />
+                                    </ListItemIcon>
+                                    <ListItemText primary={'Productos'} />
+                                </ListItem>
+                                <ListItem button>
+                                    <ListItemIcon>
+                                        <ConfirmationNumberOutlined />
+                                    </ListItemIcon>
+                                    <ListItemText primary={'Ordenes'} />
+                                </ListItem>
 
-                    <ListItem button>
-                        <ListItemIcon>
-                            <AdminPanelSettings />
-                        </ListItemIcon>
-                        <ListItemText primary={'Usuarios'} />
-                    </ListItem>
+                                <ListItem button>
+                                    <ListItemIcon>
+                                        <AdminPanelSettings />
+                                    </ListItemIcon>
+                                    <ListItemText primary={'Usuarios'} />
+                                </ListItem>
+                            </>
+                        )
+                    }
+
                 </List>
             </Box>
 

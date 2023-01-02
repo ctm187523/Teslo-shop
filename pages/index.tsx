@@ -7,6 +7,7 @@ import { FullScreenLoading } from '../components/ui';
 
 
 
+
 const HomePage: NextPage = () => {
 
   //usamos el hook useProducts creado en hooks/useProducts mandandole por argumento la url, el endpoint

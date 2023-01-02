@@ -10,11 +10,12 @@ import { Box, Button, Grid, TextField, Typography, Link, Chip } from '@mui/mater
 import React from 'react'
 import { AuthLayout } from '../../components/layouts';
 import { validations } from '../../utils';
-import tesloApi from '../../api/tesloApi';
 import { useState, useContext } from 'react';
 import { ErrorOutline } from '@mui/icons-material';
 import { AuthContext } from '../../context/auth/AuthContext';
 import { useRouter } from 'next/router';
+import { getSession, signIn } from 'next-auth/react';
+import { GetServerSideProps } from 'next';
 
 type FormData = {
     name: string;
@@ -49,15 +50,23 @@ const RegisterPage = () => {
 
         //si devuelve true o sea que no se ha echo el registro
         if (hashError) {
-            setErrorMessage( message!), //le mandamos el message al useState de arriba y ponemos el signo de admiracion porque como puede venir nulo le indicamos que si vendra ya que cuando hay un error si manda el message
-            setShowEror(true); //usamos el useState de arriba para ponerlo en true y muestre el error en el componente Chip implementado abajo
+            setErrorMessage(message!), //le mandamos el message al useState de arriba y ponemos el signo de admiracion porque como puede venir nulo le indicamos que si vendra ya que cuando hay un error si manda el message
+                setShowEror(true); //usamos el useState de arriba para ponerlo en true y muestre el error en el componente Chip implementado abajo
             //pasados 3 segundos dejamos de mostrarlo
             setTimeout(() => setShowEror(false), 3000);
             return;
         }
 
-        //en caso contrario si todo sale bien redirigimos al home usando el hook useRouter importado arriba
-        router.replace('/'); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+        //navegar a la pagina home o a la ultima pagina visitada, 
+        //nos dirigimos a esa pagina en caso de que tengamos la query recibida del login en caso de que
+        //no venga nos dirige al home.
+        //BORRAMOS LAS DOS LINEAS SIGUIENTES PORQUE USAMOS NEXT AUTH
+        //const destination = router.query.p?.toString() || '/'
+        //router.replace(destination); //usamos replace en lugar de push para que el usuario no pueda volver a la pagina anterior
+
+        //USAMOS NEXT AUTH
+        //usamos signIn de next auth importado arriba para autenticarnos una vez creado el nuevo usuario
+        await signIn('credentials', { email, password})
 
     }
 
@@ -74,7 +83,7 @@ const RegisterPage = () => {
                         <Grid item xs={12}>
                             <Typography variant='h1' component='h1'>Crear cuenta</Typography>
                             <Chip
-                                label={ errorMessage }
+                                label={errorMessage}
                                 color="error"
                                 icon={<ErrorOutline />}
                                 className="fadeIn"
@@ -159,19 +168,56 @@ const RegisterPage = () => {
                         </Grid>
 
                         <Grid item xs={12} display='flex' justifyContent='end'>
-                            <NextLink href="/auth/login" passHref>
+                               {/* utilizamos el router.query.p para obtener las querys que recibimos del login
+                                usamos un ternario para que si no hay querys mande a la url /aut/login sin ningunaquery*/}
+                            <NextLink
+                                href={router.query.p ? `/auth/login?p=${router.query.p}` : '/auth/login'}
+                                passHref
+                            >
                                 <Link underline='always'>
                                     ¿Ya tienes cuenta?
-                        </Link>
+                                </Link>
                             </NextLink>
                         </Grid>
                     </Grid>
                 </Box>
-
             </form>
-
         </AuthLayout>
     )
 }
+
+//usamos ServerSideRendering  para trabajar del lado del servidor, cuando alguien solicite
+//esta pagina va a venir precargada con la informacion del lado del servidor, 
+export const getServerSideProps: GetServerSideProps = async ({ req, query }) => {
+
+    //usamos el metodo getSession  de la importacion de arriba de next auth
+    //como parametro hemos desestructurado el contexto (ctx) para obtener el request(req)
+    const session = await getSession( { req });
+ 
+    //del contexot(ctx) hemos desestructurado tambien le query que lo usaremos para ver la query
+    //que nos informa en que pagina ultima estaba el usuario antes de salir a loguearse, si
+    //no viene la query redirigimos al home
+    const { p='/'} = query;
+ 
+    //si ya tenemos una session abierta no pasamos por el login y lo dirigimos directamente a la ultima
+    //pantalla visitada usando la query(q) como string
+    if( session ){
+       return{
+          redirect: {
+             destination: p.toString(),
+             permanent: false
+          }
+          
+       }
+    }
+    
+    //si no tenemos usa session abierta devolvemos la props en este caso vacias
+    return {
+        //las props son enviadas a este componente ProductPage por parametros
+        props: {
+            
+        }
+    }
+ }
 
 export default RegisterPage;
