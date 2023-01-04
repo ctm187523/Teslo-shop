@@ -94,6 +94,8 @@ export const SideMenu = () => {
                         // mostramos solo si el usuario esta logeado
                         sx={{ display: isLooggedIn ? 'flex' : 'none' }}
                         button
+                        //boton que redirige a nuestro historial de ordenes(faacturas anteriores)
+                        onClick={() => navigateTo('/orders/history')}
                     >
                         <ListItemIcon>
                             <ConfirmationNumberOutlined />

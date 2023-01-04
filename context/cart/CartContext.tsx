@@ -1,8 +1,9 @@
 
 
 import { createContext } from 'react';
+import { ShippingAddress } from '../../interfaces';
 import { ICartProduct } from '../../interfaces/cart';
-import { ShippingAddress } from './CartProvider';
+
 
 
 //creamos una interfaz para mostrar como luce el contexto
@@ -24,6 +25,9 @@ interface ContextProps {
    updateCartQuantity: (product: ICartProduct) => void
    removeCartProduct: (product: ICartProduct) => void
    updateAddress: (address: ShippingAddress) => void
+
+   //metodos de las ordenes
+   createOrder: () => Promise<{ hasError: boolean; message: string}>;
 }
 
 

@@ -8,11 +8,11 @@ import Cookies from 'js-cookie';
 //para el backend yo lo hace sin instalar nada
 //para manejar este paquete de Cookies con typeScript he instalado --> yarn add -D @types/js-cookie
 import Cookie from 'js-cookie';
+import { ShippingAddress } from '../../interfaces';
+import { tesloApi } from '../../api';
+import { IOrder } from '../../interfaces/order';
+import axios from 'axios';
 
-//creamos la interfaz para las props del componente
-interface Props {
-    children: ReactElement | ReactElement[];
-}
 
 //creamos una interfaz para el tipado de las propiedades a compartir, lo
 //usamos para tipar el estado inicial y en el ./cartReducers para tipar el state
@@ -25,21 +25,12 @@ export interface CartState {
     tax: number,
     total: number,
 
-    //tomado de pages/checkout/address, puede ser opcional
+    //tomado de interfaces/order, puede ser opcional
     //porque son los valores que recibimos de las Cookies
     shippingAddress?: ShippingAddress;
 }
 
-export interface ShippingAddress {
-    firstName: string;
-    lastName: string;
-    address: string;
-    address2?: string;
-    zip: string;
-    city: string;
-    country: string;
-    phone: string;
-}
+
 
 //usamos la interfaz creada arriba para el estado inicial
 const CART_INITIAL_STATE: CartState = {
@@ -52,7 +43,7 @@ const CART_INITIAL_STATE: CartState = {
     shippingAddress: undefined
 }
 
-export const CartProvider: FC<Props> = ({ children }) => {
+export const CartProvider: FC = ({ children }) => {
     //usamos el Hook useReducer de React como estado inicial ponemos el objeto creado arriba
     //CART_INITIAL_STATE, como reducer usamos el reducer creado cartReducer
     const [state, dispatch] = useReducer(cartReducer, CART_INITIAL_STATE);
@@ -189,19 +180,77 @@ export const CartProvider: FC<Props> = ({ children }) => {
     }
 
     //funcion para actualizar la direccion de envio
-    const updateAddress = ( address: ShippingAddress) => {
+    const updateAddress = (address: ShippingAddress) => {
 
-         //grabamos cada uno de los valores del formulario en las cookies
-         Cookies.set('firstName', address.firstName);
-         Cookies.set('lastName', address.lastName);
-         Cookies.set('address', address.address);
-         Cookies.set('address2', address.address2 || '');
-         Cookies.set('zip', address.zip);
-         Cookies.set('city', address.city);
-         Cookies.set('country', address.country);
-         Cookies.set('phone', address.phone);
+        //grabamos cada uno de los valores del formulario en las cookies
+        Cookies.set('firstName', address.firstName);
+        Cookies.set('lastName', address.lastName);
+        Cookies.set('address', address.address);
+        Cookies.set('address2', address.address2 || '');
+        Cookies.set('zip', address.zip);
+        Cookies.set('city', address.city);
+        Cookies.set('country', address.country);
+        Cookies.set('phone', address.phone);
 
-        dispatch({ type:'[Cart] - Update Address', payload:address});
+        dispatch({ type: '[Cart] - Update Address', payload: address });
+    }
+
+    //metodo para crear una orden
+    const createOrder = async (): Promise<{ hasError: boolean; message: string; }> => {
+
+        if (!state.shippingAddress) {
+            throw new Error('No hay dirección de entrega');
+        }
+
+        //la constante body sera lo que llegara al backend
+        const body: IOrder = {
+            //en orderItems hacemos un mapeo del state.cart, esparcimos todos los atributos
+            //y en el size decimos con p.size! que siempre vamos a tener el size, si no hacemos 
+            //esto da error proque en interfaces/cart el size es opcional y de esta manera 
+            //confirmamos de que siempre viene
+            orderItems: state.cart.map(p => ({
+                ...p,
+                size: p.size!
+            })),
+            shippingAddress: state.shippingAddress,
+            numberOfItems: state.numberOfItems,
+            subTotal: state.subTotal,
+            tax: state.tax,
+            total: state.total,
+            isPaid: false,
+        }
+
+        try {
+
+            //usamos axios importado arriba en api/tesloApi, hacemos un post a 
+            //orders y mandamos el body creado arriba al backend
+            //devuelve un IOrder en la data
+            const { data } = await tesloApi.post<IOrder>('/orders', body);
+
+            //hacemos el dispatch para borrar variables
+            dispatch({ type:'[Cart] - Order complete'});
+
+            //si todo sale bien devolvemos que hasError como false y en el message el id de la orden
+            return {
+                hasError: false,
+                message: data._id! //confirmamos que siempre lo vamos a tener con !
+            }
+
+        } catch (error) {
+            //si el fallo es de axios mostramos el error
+            if (axios.isAxiosError(error)) {
+                return {
+                    hasError: true,
+                    message: error.response?.data.message
+                }
+            }
+            //si es otro tipo de error
+            return {
+                hasError: true,
+                message: 'Error no controlado, hable con el administrador'
+            }
+        }
+
     }
 
     return (
@@ -215,7 +264,10 @@ export const CartProvider: FC<Props> = ({ children }) => {
             addProductToCart,
             updateCartQuantity,
             removeCartProduct,
-            updateAddress
+            updateAddress,
+
+            //metodos de las ordenes
+            createOrder,
 
         }}>
             { children}

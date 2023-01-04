@@ -10,12 +10,16 @@ import { ShopLayout } from '../../components/layouts';
 //con el siguiente comando --> yarn add @mui/x-data-grid
 //ver documentacion en --> https://mui.com/x/react-data-grid/getting-started/#main-content
 import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { GetServerSideProps, NextPage } from 'next';
+import { getSession } from 'next-auth/react';
+import { dbOrders } from '../../database';
+import { IOrder } from '../../interfaces/order';
 
 
 //creamos la constante columns para el DataGrid importado arriba de tipo GridColDef
 const columns: GridColDef[] = [
     { field: 'id', headerName: 'Id', width: 100 },
-    { field: 'fullname', headerName: 'Nobre Completo', width: 300 },
+    { field: 'fullname', headerName: 'Nombre Completo', width: 300 },
 
     {
         field: 'paid',
@@ -37,7 +41,7 @@ const columns: GridColDef[] = [
         sortable: false, //quita la flecha para ordenar el listado de filas
         renderCell: (params) => {
             return (
-                <NextLink href={`/orders/${params.row.id}`} passHref>
+                <NextLink href={`/orders/${params.row.orderId}`} passHref>
                     <Link underline='always'>
                         Ver orden
                     </Link>
@@ -47,22 +51,27 @@ const columns: GridColDef[] = [
     }
 ];
 
-//creamos la constante rows para el DataGrid importado arriba de tipo GridColDef
-const rows = [
-    { id: 1, paid: true, fullname: 'Pepe Gutierrez' },
-    { id: 2, paid: false, fullname: 'Paco Hernandez' },
-    { id: 3, paid: true, fullname: 'Luis Garcia' },
-    { id: 4, paid: true, fullname: 'Manolo Lopez' },
-    { id: 5, paid: false, fullname: 'David Gonzalez' },
-    { id: 6, paid: true, fullname: 'Maria Rojas' },
-];
 
-const HistoryPage = () => {
+interface Props {
+    orders: IOrder[];
+}
+
+const HistoryPage:NextPage<Props> = ({ orders }) => {
+
+    //creamos la constante rows para el DataGrid importado arriba de tipo GridColDef
+    const rows = orders.map( (order,index) => ({
+        id: index +1,
+        paid: order.isPaid,
+        fullname: `${ order.shippingAddress.firstName} ${ order.shippingAddress.lastName}`,
+        orderId: order._id
+    }))
+       
+            
     return (
         <ShopLayout title={'Historial de ordenes'} pageDescription={'Historial de ordenes del cliente'}>
             <Typography variant='h1' component='h1'>Historial de ordenes</Typography>
 
-            <Grid container>
+            <Grid container className='fadeIn'>
                 <Grid item xs={12} sx={{ height: 650, width: '100%' }}>
                     {/* usamos el DataGrid  de Material UI importado arriba */}
                     <DataGrid
@@ -73,11 +82,39 @@ const HistoryPage = () => {
                     />
                 </Grid>
 
-            </Grid>
+            </Grid>s
         </ShopLayout>
 
 
     )
+}
+
+//usamos ServerSideRendering  para trabajar del lado del servidor, cuando alguien solicite
+//esta pagina va a venir precargada con la informacion del lado del servidor, 
+export const getServerSideProps: GetServerSideProps = async ({ req }) => {
+
+    //usamos la funcion getSession de next auth
+    const session:any = await getSession({ req })
+
+    //si no existe una session, no esta logueado lo mandamos al login con el query de donde nos encontramos
+    if ( !session ) {
+        return {
+            redirect: {
+                destination: '/auth/login?p=/orders/history',
+                permanent: false
+            }
+        }
+    }
+
+    //usamos el metodo getOrderByUser de database/dbOrders para pedir todas las ordenes que estan relacionadas con un cliente
+    const orders = await dbOrders.getOrdersByUser( session.user._id);
+ 
+    return {
+        //las props son enviadas a este componente ProductPage por parametros
+        props: {
+          orders
+        }
+    }
 }
 
 export default HistoryPage;
