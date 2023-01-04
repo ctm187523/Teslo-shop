@@ -7,11 +7,13 @@ import { CartContext } from '../../context/cart/CartContext';
 import { ICartProduct } from '../../interfaces/cart';
 
 
+
 interface Props {
     editable?: boolean;
+    products?: any;
 }
 
-export const CartList: FC<Props> = ({ editable = false }) => {
+export const CartList: FC<Props> = ({ editable = false, products}) => {
 
     //usamos useContext para obterner atributos y metodos del contexto CartContext
     const { cart, updateCartQuantity , removeCartProduct} = useContext(CartContext);
@@ -23,10 +25,14 @@ export const CartList: FC<Props> = ({ editable = false }) => {
         updateCartQuantity(product); //llamamos a la funcion obtenida arriba del contexto CartContext
     }
 
+    //seleccionamos los productos a mostrar discriminando si vienen los productos por parametro o no 
+    //si vienen por parametro vendrian de pages/orders/[id].tsx, si no viene lo tomamos del contexto CartContext
+    const productsToSwow = products ? products : cart;
+
     return (
         <>
             {
-                cart.map(product => (
+                productsToSwow.map((product: any) => (
                     <Grid container spacing={2} sx={{ mb: 1 }} key={product.slug + product.size}> 
                         {/* dividimos los grid a lo ancho con 3,3 y 2  */}
                         <Grid item xs={3}>
@@ -56,8 +62,8 @@ export const CartList: FC<Props> = ({ editable = false }) => {
 
                                             <ItemCounter
                                                 currentValue={product.quantity}
-                                                maxValue={10} //le ponemos un valor para obtener las existencias del producto tendiramos que hacer una peticion al backend
-                                                updateQuantity={ ( value ) => onNewQuantityValue ( product, value)} //mandamos a la funcion el product para cambiar la nueva cantidad y el value que es valor que obtenemos de updateQuantity de components/ui/ItemCounter
+                                                maxValue={10} //le ponemos un valor para obtener las existencias del producto tendriamos que hacer una peticion al backend
+                                                updateQuantity={ ( value ) => onNewQuantityValue ( product as ICartProduct, value)} //mandamos a la funcion el product para cambiar la nueva cantidad y el value que es valor que obtenemos de updateQuantity de components/ui/ItemCounter
                                             />
                                         )
                                         : (
@@ -80,7 +86,7 @@ export const CartList: FC<Props> = ({ editable = false }) => {
                                     <Button 
                                     variant='text' 
                                     color='secondary'
-                                    onClick = { () => removeCartProduct (product)} //llamamos a la funcion del context CartContext importado arriba
+                                    onClick = { () => removeCartProduct (product as ICartProduct)} //llamamos a la funcion del context CartContext importado arriba
                                     > Eliminar</Button>
                                 )
                             }

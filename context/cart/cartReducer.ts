@@ -1,7 +1,8 @@
 
 import { CartState } from './';
 import { ICartProduct } from '../../interfaces/cart';
-import { ShippingAddress } from './CartProvider';
+import { ShippingAddress } from '../../interfaces';
+
 
 //definimos las acciones con textos concretos
 type CartActionType =
@@ -20,6 +21,7 @@ type CartActionType =
          total: number
       }
    }
+   | { type: '[Cart] - Order complete'}
 
 //el reducer es una funcion pura porque todos sus valores de retorno los obtiene
 //unicamente de los valores que recibe, no tiene ninguna interaccion con el mundo exterior
@@ -80,6 +82,17 @@ export const cartReducer = (state: CartState, action: CartActionType): CartState
          return {
             ...state,
             shippingAddress: action.payload
+         }
+
+      //al completar una orden reseteamos variables
+      case '[Cart] - Order complete':
+         return {
+            ...state,
+            cart: [],
+            numberOfItems: 0,
+            subTotal:0,
+            tax:0,
+            total:0
          }
 
       default:

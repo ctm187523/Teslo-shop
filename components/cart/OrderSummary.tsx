@@ -1,14 +1,24 @@
 import { Grid, Typography } from "@mui/material"
-import { useContext } from 'react';
+import { FC, useContext } from 'react';
 import { CartContext } from '../../context/cart/CartContext';
+import { summaryProps } from "../../pages/orders/[id]";
 import { currency } from "../../utils";
 
+interface Props {
+    summary? : summaryProps;
+}
 
-export const OrderSummary = () => {
+export const OrderSummary:FC<Props>= ({ summary}) => {
 
     //usamos el contexto CarContext
     const { numberOfItems, subTotal, tax, total } = useContext(CartContext);
 
+    //ponemos en una constante llamada context lo recibido del useContext de arriba
+    const context = { numberOfItems, subTotal, tax, total }
+
+    //seleccionamos la data a mostrar discriminando si vienen por parametro o no 
+    //si vienen por parametro vendrian de pages/orders/[id].tsx, si no viene lo tomamos del contexto CartContext
+    const dataToShow = summary ? summary : context
 
     return (
         <Grid container>
@@ -18,7 +28,7 @@ export const OrderSummary = () => {
             </Grid>
 
             <Grid item xs={6} display='flex' justifyContent='end'>
-                <Typography>{numberOfItems} {numberOfItems > 1 ? 'productos' : 'producto'}</Typography>
+                <Typography>{ dataToShow.numberOfItems } { dataToShow.numberOfItems > 1 ? 'productos' : 'producto'}</Typography>
             </Grid>
 
             <Grid item xs={6}>
@@ -27,7 +37,7 @@ export const OrderSummary = () => {
 
             <Grid item xs={6} display='flex' justifyContent='end'>
                 {/* usamos el objeto currency importado arriba de utils/currency */}
-                <Typography>{currency.format(subTotal)} </Typography>
+                <Typography>{currency.format(dataToShow.subTotal)} </Typography>
             </Grid>
 
             <Grid item xs={6}>
@@ -35,7 +45,7 @@ export const OrderSummary = () => {
             </Grid>
 
             <Grid item xs={6} display='flex' justifyContent='end'>  {/* usamos el objeto currency importado arriba de utils/currency */}
-                <Typography> {currency.format(tax)} </Typography>
+                <Typography> {currency.format(dataToShow.tax)} </Typography>
             </Grid>
 
             <Grid item xs={6} sx={{ mt: 2 }}>
@@ -44,7 +54,7 @@ export const OrderSummary = () => {
 
             <Grid item xs={6} sx={{ mt: 2 }} display='flex' justifyContent='end'>
                 {/* usamos el objeto currency importado arriba de utils/currency */}
-                <Typography> {currency.format(total)}</Typography>
+                <Typography> {currency.format(dataToShow.total)}</Typography>
             </Grid>
         </Grid>
     )
