@@ -1,5 +1,5 @@
 
-import { Box, Card, CardContent, Chip, Divider, Grid, Typography } from '@mui/material'
+import { Box, Card, CardContent, Chip, CircularProgress, Divider, Grid, Typography } from '@mui/material'
 import React from 'react'
 import { CartList, OrderSummary } from '../../components/cart'
 import { ShopLayout } from '../../components/layouts'
@@ -8,6 +8,12 @@ import { GetServerSideProps, NextPage } from 'next';
 import { getSession } from 'next-auth/react';
 import { dbOrders } from '../../database';
 import { IOrder } from '../../interfaces/order';
+
+//importamos paypal colocado en _ap.tsx como provider
+import { PayPalButtons } from "@paypal/react-paypal-js";
+import { tesloApi } from '../../api';
+import { useRouter } from 'next/router';
+import { useState } from 'react';
 
 interface Props {
     order: IOrder;
@@ -21,15 +27,68 @@ export interface summaryProps {
     subTotal: number,
 }
 
+//type para manejar Paypal
+export type OrderResponseBody = {
+
+    id: string;
+    status:
+    | "COMPLETED"
+    | "SAVED"
+    | "APPROVED"
+    | "VOIDED"
+    | "PAYER_ACTION_REQUIRED"
+
+};
+
 
 //recibimos las props de abajo de la funcion getServerSideProps
 const OrderPage: NextPage<Props> = ({ order }) => {
 
+    const router = useRouter();
     //desestructuramos de order recibido del getServerSideProps
-    const { shippingAddress, tax, total, numberOfItems, subTotal } = order
+    const { shippingAddress, tax, total, numberOfItems, subTotal } = order;
+
+    //useState para controlar cuando se esta realizando el pago para poner el loading
+    //el CircularProgress de abajo
+    const [isPaying, setIsPaying] = useState(false)
 
     //creamos un objeto de tipo de la interfaz creada arriba para mandarla abajo en el componente OrderSummary
     const summary: summaryProps = { tax, total, numberOfItems, subTotal }
+
+    //metodo creado al hcer un pago Paypal llamado abajo
+    //tipamos con el type creado arriba para ver de donde sale ver video 341
+    const onOrderCompleted = async (details: OrderResponseBody) => {
+
+        //si el pago no es completo retornamos un alert
+        if (details.status !== 'COMPLETED') {
+            return alert('No hay pago en Paypal')
+        }
+
+        //cambiamos en el useState de arriba a true
+        setIsPaying(true);
+
+        try {
+
+            //usamos tesloApi para uar axios de api/tesloApi y mandamos un psot al endpoit
+            //creado en pages/api/orders/pay le pasamos el transactionId que es el numero de la transaccion
+            //obtenido de la variable details obtenida en los parametros y el orderId que es el Id de la orden
+            //la data obtenida no la usamos
+            const { data } = await tesloApi.post(`/orders/pay`, {
+                transactionId: details.id,
+                orderId: order._id
+            });
+
+            //si todo sale bien recargamos esta pagina usando el router importado arriba
+            //para volver a hacer la peticion al backend y nos devuelva la orden pagada
+            router.reload();
+
+
+        } catch (error) {
+            setIsPaying(false)
+            console.log(error);
+            alert('Error');
+        }
+    }
 
     return (
         <ShopLayout title='Resumen de orden' pageDescription="Resumen de la orden">
@@ -95,21 +154,63 @@ const OrderPage: NextPage<Props> = ({ order }) => {
 
                             <Box sx={{ mt: 3 }} display="flex" flexDirection="column">
                                 {/* Pagar el pedido */}
-                                {
-                                    order.isPaid
-                                        ? (
-                                            <Chip
-                                                sx={{ my: 2 }}
-                                                label="Orden ya fue pagada"
-                                                variant='outlined'
-                                                color='success'
-                                                icon={<CreditScoreOutlined />}
-                                            />
-                                        ) : (
-                                            <h1>Pagar</h1>
-                                        )
-                                }
+                                <Box
+                                    display='flex'
+                                    justifyContent='center'
+                                    className='fadeIn'
+                                    //ponemos un condicional para mostrar o no el CircularProgress si esta en proceso de pago se muestra
+                                    sx={{ display: isPaying ? 'flex' : 'none' }}
+                                >
+                                    <CircularProgress />
+                                </Box>
 
+                                <Box
+                                    flexDirection='column'
+                                    //si isPaying esta en true o sea se esta pagando en ese momento no mostramos los botones de Paypal
+                                    //ponemos flex en q para que se expanda todo el contenido del box
+                                    sx={{ display: isPaying ? 'none' : 'flex', flex: 1 }}
+                                >
+                                    {
+                                        order.isPaid
+                                            ? (
+                                                <Chip
+                                                    sx={{ my: 2 }}
+                                                    label="Orden ya fue pagada"
+                                                    variant='outlined'
+                                                    color='success'
+                                                    icon={<CreditScoreOutlined />}
+                                                />
+                                            ) : (
+                                                // colocamos los botones de paypal importado arriba
+                                                //el codigo es sacado de --> https://www.npmjs.com/package/@paypal/react-paypal-js
+                                                <PayPalButtons
+                                                    createOrder={(data, actions) => {
+                                                        return actions.order.create({
+                                                            purchase_units: [
+                                                                {
+                                                                    amount: {
+                                                                        //ponemos el total de la factura(orden)
+                                                                        value: `${order.total}`,
+                                                                    },
+                                                                },
+                                                            ],
+                                                        });
+                                                    }}
+                                                    onApprove={(data, actions) => {
+                                                        return actions.order!.capture().then((details) => {
+                                                            onOrderCompleted(details); //llamamos al metodo creado arriba y le pasamos la varaible details de la linea de arriba
+                                                            //console.log({details})
+                                                            //const name = details.payer.name!.given_name;
+                                                            //alert(`Transaction completed by ${name}`);
+
+
+                                                        });
+                                                    }}
+                                                />
+                                            )
+                                    }
+
+                                </Box>
                             </Box>
                         </CardContent>
                     </Card>

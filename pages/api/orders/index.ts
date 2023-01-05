@@ -86,7 +86,13 @@ const createOrder = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
         // y ponemos el isPaid como false por si alguin lo ha modificado y el user como userId obtenido en la linea de abajo
         const userId = session.user._id;
         const newOrder = new Order({ ...req.body, isPaid: false, user: userId });
-        await newOrder.save(); //grabamos en la base de datos la nueva orden
+
+        //redondeamos el total de la nueva orden creada a dos decimales
+        newOrder.total = Math.round( newOrder.total * 100) /100;
+
+        //grabamos en la base de datos la nueva orden
+        await newOrder.save(); 
+        
         await db.disconnect();
         return res.status(201).json( newOrder);
 
