@@ -9,7 +9,7 @@ import { ShopLayout } from '../../components/layouts';
 //importamos el componente DataGrid que usamos en esta página lo hemos instalado de material UI
 //con el siguiente comando --> yarn add @mui/x-data-grid
 //ver documentacion en --> https://mui.com/x/react-data-grid/getting-started/#main-content
-import { DataGrid, GridColDef, GridValueGetterParams } from '@mui/x-data-grid';
+import { DataGrid, GridColDef } from '@mui/x-data-grid';
 import { GetServerSideProps, NextPage } from 'next';
 import { getSession } from 'next-auth/react';
 import { dbOrders } from '../../database';
@@ -82,7 +82,7 @@ const HistoryPage:NextPage<Props> = ({ orders }) => {
                     />
                 </Grid>
 
-            </Grid>s
+            </Grid>
         </ShopLayout>
 
 
