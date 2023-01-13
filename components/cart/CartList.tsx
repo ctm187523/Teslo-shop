@@ -40,7 +40,7 @@ export const CartList: FC<Props> = ({ editable = false, products}) => {
                             <NextLink href= { `/product/${ product.slug }`} passHref>
                                 <CardActionArea>
                                     <CardMedia
-                                        image={`/products/${product.image}`}
+                                        image={product.image }
                                         component='img'
                                         sx={{ borderRadius: '5px' }}
                                     />

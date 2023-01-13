@@ -24,8 +24,6 @@ export const ProductsSlideshow: FC<Props> = ( { images }) => {
         >
           {
               images.map ( image => {
-                // las imagenes vienen de public/products
-                  const url = `/products/${ image }`
                   return (
                     // en el className usamos los estilos creados en este directorio ProductSlideshow.module.css
                     //lo ponemos entre corchetes [] como una propiedad comnumatada porque el menos de each-slide 
@@ -33,7 +31,7 @@ export const ProductsSlideshow: FC<Props> = ( { images }) => {
                       <div className={ styles['each-slide']} key={ image }>
                           <div style={{
                             //la imagen la colocamos de la constante url de arriba
-                              backgroundImage: `url(${ url })`,
+                              backgroundImage: `url(${ image })`,
                               backgroundSize: 'cover'
                           }}>
 

@@ -20,8 +20,8 @@ export const ProductCard: FC<Props> = ({ product }) => {
     //posicion 1 de la carpeta public/products si es false mostramos la posicion 0
     const productImage = useMemo(() => {
         return isHovered
-            ? `/products/${product.images[1]}`
-            : `/products/${product.images[0]}`
+            ? product.images[1]
+            : product.images[0];
 
     }, [isHovered, product.images])
 
