@@ -63,7 +63,7 @@ const getProducts = async (req: NextApiRequest, res: NextApiResponse<Data>) => {
         // y si la imagen viene de cloudinary ponemos directamente la imagen
         product.images = product.images.map(image => {
             //si la imagen icluye http quiere decir que viene de cloudinary
-            return image.includes('http') ? image : `${process.env.VERCEL_URL}/products/${image}`
+            return image.includes('http') ? image : `${process.env.HOST_NAME}products/${image}`
         });
 
         return product;
